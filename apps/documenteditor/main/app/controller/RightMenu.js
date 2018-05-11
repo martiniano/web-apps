@@ -276,6 +276,9 @@ define([
                     var open = Common.localStorage.getItem("de-hide-right-settings");
                     open = (open===null || parseInt(open) == 0);
 
+                    //Força a renderizar o menu direito fechado - Anderson Martinaino
+                    open = false;
+
                     this.onFocusObject(selectedElements, open);
                 }
             }

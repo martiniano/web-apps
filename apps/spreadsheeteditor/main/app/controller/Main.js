@@ -885,8 +885,9 @@ define([
 
                 if (this.headerView) {
                     this.headerView.setHeaderCaption(this.appOptions.isEdit ? 'Spreadsheet Editor' : 'Spreadsheet Viewer');
-                    this.headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isEditMailMerge && 
-                            !this.appOptions.isDesktopApp && !this.appOptions.isEditDiagram);
+                    //this.headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isEditMailMerge && 
+                    //        !this.appOptions.isDesktopApp && !this.appOptions.isEditDiagram);
+                    this.headerView.setVisible(false);
                 }
 
                 viewport && viewport.setMode(this.appOptions, true);

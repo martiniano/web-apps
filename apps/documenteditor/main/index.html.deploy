@@ -280,6 +280,139 @@
                 clearTimeout(requireTimeoutID);
             }
         };
+
+        
+        var _replaceItens;
+
+        window.addEventListener("message", receiveMessage, {captive: true, passive: true})
+
+        function receiveMessage (event) {
+        	var guidListener = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
+			var guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
+        	
+        	let o;
+        	try {
+        		o = JSON.parse(event.data);
+        	} catch (e) {
+        		console.warn(e);
+        		o = {};
+        	}
+
+        	if(o.type == 'onExternalPluginMessage'){
+				sendExternalPluginMessage(o, event);
+        	}
+
+        	if(o.type == 'replaceMacrosOnlyoffice'){
+				replaceMacrosOnlyoffice(guidListener, null);
+        	}
+
+        	if(o.type == 'receiveMacrosOnlyoffice'){
+				receiveMacrosOnlyoffice(guidNuclearisMacros, null);
+        	}
+
+        	if(o.type == 'forceSave'){
+				window.AscDesktopEditor_Save();
+        	}
+
+        	if (window.g_asc_plugins){
+        		
+                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
+                    if(plugin.guid !== guidListener){					
+                        startPluginListener(guidListener);
+                    }
+                });
+
+                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
+                    //console.log("xxxxxxxx");  
+                });
+
+                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginsInit', function(plugin){
+                    //console.log("xxxxxxxx");
+                });
+
+                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentChanged', function(){
+                    //console.log("xxxxxxxx");
+                });
+
+                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentModifiedChanged', function(){
+                    //console.log("xxxxxxxx");
+                });
+
+                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentContentReady', function(){
+                    //console.log("xxxxxxxx");
+                });
+
+        	   if(o.extra == 'startPluginListener'){
+        			_replaceItens = o.replaceItens;
+                    startPluginListener(guidListener);
+        	   }
+        	}
+        }
+
+        function startPluginListener(guidListener){
+        	var plugin = window.g_asc_plugins.getPluginByGuid(guidListener);
+        	if (!plugin)
+        		return;
+
+        	var isRunned = (window.g_asc_plugins.runnedPluginsMap[guidListener] !== undefined) ? true : false;	
+        	if(!isRunned){
+        		window.g_asc_plugins.run(guidListener, "");
+        	}	
+        }
+
+		function sendExternalPluginMessage(o, event){
+    		if(o.frameEditorId){
+				var _iframe = document.getElementById(o.frameEditorId);
+    			if (_iframe)
+    				_iframe.contentWindow.postMessage(event.data, "*");
+    		}		
+		}
+
+
+		function replaceMacrosOnlyoffice(guidListener, replaceItens)
+		{
+			if(!replaceItens)
+				replaceItens = _replaceItens;
+			
+			var dataMessage = {
+				frameEditorId : "iframe_"+guidListener,
+				guid : guidListener,
+				type : "onExternalPluginMessage",
+				data : {
+					type: "insertText",
+					text: {},
+					macros: replaceItens
+				}
+			};
+
+    		if(dataMessage.frameEditorId){
+				var _iframe = document.getElementById(dataMessage.frameEditorId);
+    			if (_iframe)
+    				_iframe.contentWindow.postMessage(JSON.stringify(dataMessage), "*");
+    		}	
+		}
+
+		function receiveMacrosOnlyoffice(guidNuclearisMacros, replaceItens)
+		{
+			if(!replaceItens)
+				replaceItens = _replaceItens;
+			
+			var dataMessage = {
+				frameEditorId : "iframe_"+guidNuclearisMacros,
+				guid : guidNuclearisMacros,
+				type : "onExternalPluginMessage",
+				data : {
+					type: "receiveMacros",
+					macros: replaceItens
+				}
+			};
+
+    		if(dataMessage.frameEditorId){
+				var _iframe = document.getElementById(dataMessage.frameEditorId);
+    			if (_iframe)
+    				_iframe.contentWindow.postMessage(JSON.stringify(dataMessage), "*");
+    		}	
+		}
     </script>
 
 

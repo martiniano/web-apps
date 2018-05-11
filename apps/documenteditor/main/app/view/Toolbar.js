@@ -1217,6 +1217,10 @@ define([
                     ]
                 })
             );
+
+            //Anderson Martiniano
+            this.mnuitemHideTitleBar.hide();
+
             if (this.mode.isDesktopApp || this.mode.canBrandingExt && this.mode.customization && this.mode.customization.header===false)
                 this.mnuitemHideTitleBar.hide();
             if (this.mode.canBrandingExt && this.mode.customization && this.mode.customization.statusBar===false)

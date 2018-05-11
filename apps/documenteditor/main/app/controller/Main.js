@@ -354,6 +354,7 @@ define([
             },
 
             onProcessSaveResult: function(data) {
+                console.log('onProcessSaveResult');
                 this.api.asc_OnSaveEnd(data.result);
                 if (data && data.result === false) {
                     Common.UI.error({
@@ -662,6 +663,7 @@ define([
                         force = true;
                         title   = this.saveTitleText;
                         text    = (!this.appOptions.isOffline) ? this.saveTextText : '';
+                        action.type = Asc.c_oAscAsyncActionType['BlockInteraction'];
                         break;
 
                     case Asc.c_oAscAsyncAction['ForceSaveTimeout']:
@@ -1101,7 +1103,8 @@ define([
 
                 if (headerView) {
                     headerView.setHeaderCaption(this.appOptions.isEdit ? 'Document Editor' : 'Document Viewer');
-                    headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isDesktopApp);
+                    //headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isDesktopApp);
+                    headerView.setVisible(false);
                 }
 
                 if (this.appOptions.nativeApp) {
@@ -1489,6 +1492,7 @@ define([
             },
 
             onContextMenu: function(event){
+
                 var canCopyAttr = event.target.getAttribute('data-can-copy'),
                     isInputEl   = (event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement);
 
@@ -1497,7 +1501,7 @@ define([
                     event.stopPropagation();
                     event.preventDefault();
                     return false;
-                }
+                }                
             },
 
             onBeforeUnload: function() {
@@ -1605,6 +1609,8 @@ define([
                 this.getApplication().getController('Toolbar').getView('Toolbar').synchronizeChanges();
                 /** coauthoring end **/
                 this._state.hasCollaborativeChanges = false;
+
+                this.loadMask && this.loadMask.hide();
             },
 
             initNames: function() {
