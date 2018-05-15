@@ -281,13 +281,10 @@
             }
         };
 
-        
-        var _replaceItens;
-
         window.addEventListener("message", receiveMessage, {captive: true, passive: true})
 
         function receiveMessage (event) {
-        	var guidListener = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
+        	var guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
 			var guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
         	
         	let o;
@@ -303,11 +300,7 @@
         	}
 
         	if(o.type == 'replaceMacrosOnlyoffice'){
-				replaceMacrosOnlyoffice(guidListener, null);
-        	}
-
-        	if(o.type == 'receiveMacrosOnlyoffice'){
-				receiveMacrosOnlyoffice(guidNuclearisMacros, null);
+				replaceMacrosOnlyoffice(guidConstrutorDeLaudo);
         	}
 
         	if(o.type == 'forceSave'){
@@ -317,8 +310,8 @@
         	if (window.g_asc_plugins){
         		
                 window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
-                    if(plugin.guid !== guidListener){					
-                        startPluginListener(guidListener);
+                    if(plugin.guid !== guidConstrutorDeLaudo){					
+                        startPluginConstrutorDeLaudo(guidConstrutorDeLaudo);
                     }
                 });
 
@@ -342,21 +335,20 @@
                     //console.log("xxxxxxxx");
                 });
 
-        	   if(o.extra == 'startPluginListener'){
-        			_replaceItens = o.replaceItens;
-                    startPluginListener(guidListener);
+        	   if(o.extra == 'startPluginConstrutorDeLaudo'){
+                    startPluginConstrutorDeLaudo(guidConstrutorDeLaudo);
         	   }
         	}
         }
 
-        function startPluginListener(guidListener){
-        	var plugin = window.g_asc_plugins.getPluginByGuid(guidListener);
+        function startPluginConstrutorDeLaudo(guidConstrutorDeLaudo){
+        	var plugin = window.g_asc_plugins.getPluginByGuid(guidConstrutorDeLaudo);
         	if (!plugin)
         		return;
 
-        	var isRunned = (window.g_asc_plugins.runnedPluginsMap[guidListener] !== undefined) ? true : false;	
+        	var isRunned = (window.g_asc_plugins.runnedPluginsMap[guidConstrutorDeLaudo] !== undefined) ? true : false;	
         	if(!isRunned){
-        		window.g_asc_plugins.run(guidListener, "");
+        		window.g_asc_plugins.run(guidConstrutorDeLaudo, "");
         	}	
         }
 
@@ -369,19 +361,14 @@
 		}
 
 
-		function replaceMacrosOnlyoffice(guidListener, replaceItens)
-		{
-			if(!replaceItens)
-				replaceItens = _replaceItens;
-			
+		function replaceMacrosOnlyoffice(guidConstrutorDeLaudo)
+		{			
 			var dataMessage = {
-				frameEditorId : "iframe_"+guidListener,
-				guid : guidListener,
+				frameEditorId : "iframe_"+guidConstrutorDeLaudo,
+				guid : guidConstrutorDeLaudo,
 				type : "onExternalPluginMessage",
 				data : {
-					type: "insertText",
-					text: {},
-					macros: replaceItens
+					type: "insertText"
 				}
 			};
 
@@ -392,27 +379,6 @@
     		}	
 		}
 
-		function receiveMacrosOnlyoffice(guidNuclearisMacros, replaceItens)
-		{
-			if(!replaceItens)
-				replaceItens = _replaceItens;
-			
-			var dataMessage = {
-				frameEditorId : "iframe_"+guidNuclearisMacros,
-				guid : guidNuclearisMacros,
-				type : "onExternalPluginMessage",
-				data : {
-					type: "receiveMacros",
-					macros: replaceItens
-				}
-			};
-
-    		if(dataMessage.frameEditorId){
-				var _iframe = document.getElementById(dataMessage.frameEditorId);
-    			if (_iframe)
-    				_iframe.contentWindow.postMessage(JSON.stringify(dataMessage), "*");
-    		}	
-		}
     </script>
 
 

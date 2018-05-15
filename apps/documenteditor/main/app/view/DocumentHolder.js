@@ -81,6 +81,7 @@ define([
             me._currentParaObjDisabled = false;
 
             var showPopupMenu = function(menu, value, event, docElement, eOpts){
+                console.log('showPopupMenu');
                 if (!_.isUndefined(menu)  && menu !== null){
                     Common.UI.Menu.Manager.hideAll();
 
@@ -261,6 +262,8 @@ define([
                 }
             };
 
+            var digitedWord = "";
+
             var handleDocumentKeyDown = function(event){
                 if (me.api){
                     var key = event.keyCode;
@@ -289,6 +292,19 @@ define([
                         Common.UI.Menu.Manager.hideAll();
                         Common.NotificationCenter.trigger('leftmenu:change', 'hide');
                     }
+
+                    if(key == Common.UI.Keys.SPACE) {
+                        console.log('Espaço keydown!');
+                        var bla = me.api.Get_CursorPosInCompositeText();
+                        console.log(bla);
+                        //var bla2 = me.api.getAddedTextOnKeyDown(event);
+                        //console.log(bla2);
+                        console.log(digitedWord);
+                        digitedWord = "";
+                    }
+
+                    console.log(event.key);
+                    digitedWord += event.key;                    
                 }
             };
 
@@ -1780,6 +1796,27 @@ define([
         },
         /** coauthoring end **/
 
+        addShortcut: function(item, e, eOpt){
+            var win, me = this;
+            if (me.api){
+                win = new DE.Views.HyperlinkSettingsDialog({
+                    api: me.api,
+                    handler: function(dlg, result) {
+                        if (result == 'ok') {
+                            me.api.add_Hyperlink(dlg.getSettings());
+                        }
+                        me.fireEvent('editcomplete', me);
+                    }
+                });
+
+                win.show();
+                win.setSettings(item.hyperProps.value);
+
+                Common.component.Analytics.trackEvent('DocumentHolder', 'Add Hyperlink');
+            }
+        },
+
+
         addHyperlink: function(item, e, eOpt){
             var win, me = this;
             if (me.api){
@@ -3156,6 +3193,10 @@ define([
                 caption     : '--'
             });
 
+            var menuAddShortcutPara = new Common.UI.MenuItem({
+                caption     : me.shortcutText
+            }).on('click', _.bind(me.addShortcut, me));
+
             this.textMenu = new Common.UI.Menu({
                 initMenu: function(value){
                     var isInShape = (value.imgProps && value.imgProps.value && !_.isNull(value.imgProps.value.get_ShapeProperties()));
@@ -3256,8 +3297,11 @@ define([
                     if (me.mode.canEditStyles && !isInChart) {
                         me.menuStyleUpdate.setCaption(me.updateStyleText.replace('%1', DE.getController('Main').translationTable[window.currentStyleName] || window.currentStyleName));
                     }
+
+                    menuAddShortcutPara.setVisible(false);
                 },
                 items: [
+                    menuAddShortcutPara,
                     me.menuSpellPara,
                     me.menuSpellMorePara,
                     menuSpellcheckParaSeparator,
@@ -3590,7 +3634,8 @@ define([
         textContentsRemove: 'Remove table of contents',
         textUpdateAll: 'Update entire table',
         textUpdatePages: 'Update page numbers only',
-        txtPasteSourceFormat: 'Keep source formatting'
+        txtPasteSourceFormat: 'Keep source formatting',
+        shortcutText: 'Add Shortcut'
 
     }, DE.Views.DocumentHolder || {}));
 });
