@@ -72,10 +72,11 @@
             // Document Editor event handlers
 
             function onRequestEmailAddresses() {
-                docEditor.setEmailAddresses({emailAddresses: ['aaa@mail.ru'], createEmailAccountUrl: 'http://ya.ru'});
+                //docEditor.setEmailAddresses({emailAddresses: ['aaa@mail.ru'], createEmailAccountUrl: 'http://ya.ru'});
             }
 
             function onRequestHistory() {
+                
                 docEditor.refreshHistory({
                     'currentVersion': 3,
                     'history': [
@@ -157,9 +158,11 @@
                         'key': 'wyX9AwRq_677SWKjhfk='
                     }]
                 });
+                
             }
 
             function onRequestHistoryData(revision) {
+                
                 docEditor.setHistoryData(
                     {
                         'version': revision.data,
@@ -168,6 +171,7 @@
                         'changesUrl': 'http://isa2'
                     }
                 );
+                
             }
 
             function onRequestStartMailMerge() {
@@ -180,13 +184,13 @@
 
             function onDocEditorReady(event) {
                 if (event.target) {
-                    //console.log('Ready! Editor: ', event.target);
+                    console.log('Ready! Editor: ', event.target);
                 }
             }
 
             function onDocumentStateChange(event) {
                 var isModified = event.data;
-                //console.log(isModified);
+                console.log(isModified);
             }
 
             function onRequestEditRights(event) {
@@ -227,7 +231,6 @@
                     url: urlParams["url"] || '_offline_',
                     title: urlParams["title"],
                     fileType: urlParams["filetype"],
-                    vkey: urlParams["vkey"],
                     permissions: {
                         edit: true,
                         download: true,
