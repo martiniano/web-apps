@@ -547,7 +547,7 @@ define([
                         screenTip.toolTip.getBSTip().$tip.css({top: showPoint[1] + 'px', left: showPoint[0] + 'px'});
                     }
                     /** coauthoring begin **/
-                    else if (moveData.get_Type()==2 && me.mode.isEdit) { // 2 - locked object
+                    else if (moveData.get_Type()==2 && me.moonde.isEdit) { // 2 - locked object
                         var src;
                         if (me.usertipcount >= me.usertips.length) {
                             src = $(document.createElement("div"));
