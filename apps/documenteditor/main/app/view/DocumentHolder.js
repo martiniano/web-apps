@@ -294,17 +294,8 @@ define([
                     }
 
                     if(key == Common.UI.Keys.SPACE) {
-                        console.log('Espaço keydown!');
-                        var bla = me.api.Get_CursorPosInCompositeText();
-                        console.log(bla);
-                        //var bla2 = me.api.getAddedTextOnKeyDown(event);
-                        //console.log(bla2);
-                        console.log(digitedWord);
-                        digitedWord = "";
-                    }
-
-                    console.log(event.key);
-                    digitedWord += event.key;                    
+                        me.api.get_InputedTextNuclearis();
+                    }             
                 }
             };
 
@@ -547,7 +538,7 @@ define([
                         screenTip.toolTip.getBSTip().$tip.css({top: showPoint[1] + 'px', left: showPoint[0] + 'px'});
                     }
                     /** coauthoring begin **/
-                    else if (moveData.get_Type()==2 && me.moonde.isEdit) { // 2 - locked object
+                    else if (moveData.get_Type()==2 && me.mode.isEdit) { // 2 - locked object
                         var src;
                         if (me.usertipcount >= me.usertips.length) {
                             src = $(document.createElement("div"));

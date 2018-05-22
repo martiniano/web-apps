@@ -111,6 +111,7 @@ define([
 
             onLaunch: function () {
                 this.createView('EditText').render();
+                console.log('onLaunch Edit Text');
             },
 
             initEvents: function () {

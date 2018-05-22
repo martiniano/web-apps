@@ -54,6 +54,7 @@ define([
             SHIFT:      16,
             CTRL:       17,
             ALT:        18,
+            CAPSLOCK:   20,
             ESC:        27,
             LEFT:       37,
             UP:         38,
