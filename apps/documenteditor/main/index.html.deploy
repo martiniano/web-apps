@@ -295,9 +295,11 @@
         		o = {};
         	}
 
+            /*
         	if(o.type == 'onExternalPluginMessage'){
 				sendExternalPluginMessage(o, event);
         	}
+            */
 
         	if(o.type == 'replaceMacrosOnlyoffice'){
 				replaceMacrosOnlyoffice(guidConstrutorDeLaudo);
@@ -352,6 +354,7 @@
         	}	
         }
 
+        /*
 		function sendExternalPluginMessage(o, event){
     		if(o.frameEditorId){
 				var _iframe = document.getElementById(o.frameEditorId);
@@ -359,6 +362,7 @@
     				_iframe.contentWindow.postMessage(event.data, "*");
     		}		
 		}
+        */
 
 
 		function replaceMacrosOnlyoffice(guidConstrutorDeLaudo)

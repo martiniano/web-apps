@@ -294,7 +294,7 @@ define([
                     }
 
                     if(key == Common.UI.Keys.SPACE) {
-                        me.api.get_InputedTextNuclearis();
+                        //me.api.get_InputedTextNuclearis();
                     }             
                 }
             };
