@@ -311,11 +311,13 @@
 
         	if (window.g_asc_plugins){
         		
-                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
-                    if(plugin.guid !== guidConstrutorDeLaudo){					
-                        startPluginConstrutorDeLaudo(guidConstrutorDeLaudo);
-                    }
-                });
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginClose')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
+                        if(plugin.guid !== guidConstrutorDeLaudo){					
+                            startPluginConstrutorDeLaudo(guidConstrutorDeLaudo);
+                        }
+                    });
+                }
 
                 window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
                     //console.log("xxxxxxxx");  
@@ -350,7 +352,7 @@
 
         	var isRunned = (window.g_asc_plugins.runnedPluginsMap[guidConstrutorDeLaudo] !== undefined) ? true : false;	
         	if(!isRunned){
-        		window.g_asc_plugins.run(guidConstrutorDeLaudo, "");
+        		window.g_asc_plugins.run(guidConstrutorDeLaudo, 0, null, true);
         	}	
         }
 
