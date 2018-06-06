@@ -348,12 +348,13 @@
 
         })();
 
+        var guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
+        var guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
+
         window.addEventListener("message", receiveMessage, {captive: true, passive: true})
 
         function receiveMessage (event) {
-            var guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
-            var guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
-            
+
             let o;
             try {
                 o = JSON.parse(event.data);
@@ -369,7 +370,7 @@
             */
 
             if(o.type == 'replaceMacrosOnlyoffice'){
-                replaceMacrosOnlyoffice(guidConstrutorDeLaudo);
+                replaceMacrosOnlyoffice();
             }
 
             if(o.type == 'forceSave'){
@@ -377,7 +378,7 @@
             }
 
             if (window.g_asc_plugins){
-                
+               
                 if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginClose')){
                     window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
                         if(plugin.guid !== guidConstrutorDeLaudo){					
@@ -386,40 +387,65 @@
                     });
                 }
 
-                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
-                    //console.log("xxxxxxxx");  
-                });
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginShow')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
+                        //console.log("xxxxxxxx");  
+                    });
+                }
 
-                window.g_asc_plugins.api.asc_registerCallback('asc_onPluginsInit', function(plugin){
-                    //console.log("xxxxxxxx");
-                });
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginsInit')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onPluginsInit', function(plugin){
+                        //console.log("xxxxxxxx");
+                    });
+                }
 
-                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentChanged', function(){
-                    //console.log("xxxxxxxx");
-                });
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onDocumentChanged')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentChanged', function(){
+                        //console.log("asc_onDocumentChanged");
+                    });
+                }
 
-                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentModifiedChanged', function(){
-                    //console.log("xxxxxxxx");
-                });
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onDocumentModifiedChanged')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentModifiedChanged', function(){
+                        //console.log("asc_onDocumentModifiedChanged");
+                    });
+                }
 
-                window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentContentReady', function(){
-                    //console.log("xxxxxxxx");
-                });
-
+                if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onDocumentContentReady')){
+                    window.g_asc_plugins.api.asc_registerCallback('asc_onDocumentContentReady', function(){
+                        //console.log("xxxxxxxx");
+                    });
+                }
+                
                 if(o.extra == 'startPluginConstrutorDeLaudo'){
-                        startPluginConstrutorDeLaudo(guidConstrutorDeLaudo);
+                    startPluginConstrutorDeLaudo();
                 }
             }
         }
 
-        function startPluginConstrutorDeLaudo(guidConstrutorDeLaudo){
+        function startPluginConstrutorDeLaudo(){
             var plugin = window.g_asc_plugins.getPluginByGuid(guidConstrutorDeLaudo);
             if (!plugin)
                 return;
 
             var isRunned = (window.g_asc_plugins.runnedPluginsMap[guidConstrutorDeLaudo] !== undefined) ? true : false;	
             if(!isRunned){
-                window.g_asc_plugins.run(guidConstrutorDeLaudo, 0, null, true);
+                
+                var mainController;
+                var pluginData = new window.Asc.CPluginData();
+
+                try { mainController = DE.getController('Main'); } catch(e) {
+                    try { mainController = PE.getController('Main'); } catch(e) {
+                        try { mainController =  SSE.getController('Main'); } catch(e) {}
+                    }
+                }
+
+			    if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
+                    //window.localStorage.setItem('macros', JSON.stringify(mainController.editorConfig.macros));
+                    pluginData.setAttribute("macros", mainController.editorConfig.macros);
+			    }
+                
+                window.g_asc_plugins.run(guidConstrutorDeLaudo, 0, pluginData, true);
             }	
         }
 
@@ -434,7 +460,7 @@
         */
 
 
-        function replaceMacrosOnlyoffice(guidConstrutorDeLaudo)
+        function replaceMacrosOnlyoffice()
         {			
             var dataMessage = {
                 frameEditorId : "iframe_"+guidConstrutorDeLaudo,
