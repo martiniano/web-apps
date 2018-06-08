@@ -663,7 +663,6 @@ define([
                         force = true;
                         title   = this.saveTitleText;
                         text    = (!this.appOptions.isOffline) ? this.saveTextText : '';
-                        action.type = Asc.c_oAscAsyncActionType['BlockInteraction'];
                         break;
 
                     case Asc.c_oAscAsyncAction['ForceSaveTimeout']:
