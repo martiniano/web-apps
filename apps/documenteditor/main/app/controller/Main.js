@@ -1101,7 +1101,8 @@ define([
 
                 if (headerView) {
                     headerView.setHeaderCaption(this.appOptions.isEdit ? 'Document Editor' : 'Document Viewer');
-                    headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isDesktopApp);
+                    //headerView.setVisible(!this.appOptions.nativeApp && !value && !this.appOptions.isDesktopApp);
+                    headerView.setVisible(false);
                 }
 
                 if (this.appOptions.nativeApp) {

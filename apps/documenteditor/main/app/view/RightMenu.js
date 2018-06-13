@@ -151,6 +151,10 @@ define([
 
             var open = Common.localStorage.getItem("de-hide-right-settings");
             open = (open===null || parseInt(open) == 0);
+
+            //Força a renderizar o menu direito fechado - Anderson Martiniano
+            open = false;
+
             el.css('width', ((open) ? MENU_SCALE_PART : SCALE_MIN) + 'px');
             el.show();
 
