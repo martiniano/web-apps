@@ -629,6 +629,8 @@ define([
                             }, 500);
                         } else
                             this.getApplication().getController('Statusbar').setStatusCaption(this.textChangesSaved, false, 3000);
+
+                        this.loadMask && this.loadMask.hide();
                     } else
                         this.getApplication().getController('Statusbar').setStatusCaption('');
                 }
@@ -744,7 +746,7 @@ define([
                         break;
                 }
 
-                if (action.type == Asc.c_oAscAsyncActionType['BlockInteraction']) {
+                if (action.type == Asc.c_oAscAsyncActionType['BlockInteraction'] || action.id==Asc.c_oAscAsyncAction['Save'] || action.id==Asc.c_oAscAsyncAction['ForceSaveButton']) {
                     if (!this.loadMask)
                         this.loadMask = new Common.UI.LoadMask({owner: $('#viewport')});
 
