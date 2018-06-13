@@ -1,7 +1,7 @@
 {
     "name": "documenteditor",
     "version": "5.1.4",
-    "build": 1112,
+    "build": 1116,
     "homepage": "http://www.onlyoffice.com",
     "private": true,
     "main": {
@@ -156,6 +156,12 @@
                     "cwd": "../apps/documenteditor/main/resources/help/ru/",
                     "src": "**",
                     "dest": "../deploy/web-apps/apps/documenteditor/main/resources/help/ru/"
+                },
+                {
+                    "expand": true,
+                    "cwd": "../apps/documenteditor/main/resources/help/pt/",
+                    "src": "**",
+                    "dest": "../deploy/web-apps/apps/documenteditor/main/resources/help/pt/"
                 }
             ],
             "index-page": [
