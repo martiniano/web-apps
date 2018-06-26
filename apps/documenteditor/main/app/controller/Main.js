@@ -590,7 +590,9 @@ define([
                     toolbarView.btnHighlightColor.toggle(false, false);
                 }
                 
-                //application.getController('DocumentHolder').getView('DocumentHolder').focus();
+                if(this.editorConfig.autoFocus){
+                    application.getController('DocumentHolder').getView('DocumentHolder').focus();
+                }
 
                 if (this.api) {
                     var cansave = this.api.asc_isDocumentCanSave(),
