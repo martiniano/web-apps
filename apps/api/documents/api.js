@@ -706,6 +706,7 @@
         iframe.allowFullscreen = true;
         iframe.setAttribute("allowfullscreen",""); // for IE11
         iframe.setAttribute("onmousewheel",""); // for Safari on Mac
+        iframe.setAttribute("scrolling","no"); // for Firefox
         return iframe;
     }
 
