@@ -285,6 +285,13 @@
                         about: true,
                         feedback: true,
                         autosave: false
+                    },
+                    atalhos: {
+                        'amr': 'Anderson Martiniano da Rocha',
+                        'amrt': 'Anderson Martiniano da Rocha',
+                        'amrpt': 'Anderson Martiniano da Rocha',
+                        'bb': 'Banco do Brasil',
+                        'VV': 'Vinicius é Viado!' 
                     }
                 };
             }
@@ -347,7 +354,6 @@
 
         var guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
         var guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
-        
         window.addEventListener("message", receiveMessage, {captive: true, passive: true})
         function receiveMessage (event) {
             let o;
@@ -362,14 +368,17 @@
                 sendExternalPluginMessage(o, event);
             }
             */
+            /*
             if(o.type == 'replaceMacrosOnlyoffice'){
                 replaceMacrosOnlyoffice();
             }
+            */
+
             if(o.type == 'forceSave'){
                 window.AscDesktopEditor_Save();
             }
             if (window.g_asc_plugins){
-               
+            
                 if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginClose')){
                     window.g_asc_plugins.api.asc_registerCallback('asc_onPluginClose', function(plugin){
                         if(plugin.guid !== guidConstrutorDeLaudo){					
@@ -377,6 +386,8 @@
                         }
                     });
                 }
+
+                /*
                 if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginShow')){
                     window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
                         //console.log("xxxxxxxx");  
@@ -406,8 +417,10 @@
                 if(o.extra == 'startPluginConstrutorDeLaudo'){
                     startPluginConstrutorDeLaudo();
                 }
+                */
             }
         }
+        /*
         function startPluginConstrutorDeLaudo(){
             var plugin = window.g_asc_plugins.getPluginByGuid(guidConstrutorDeLaudo);
             if (!plugin)
@@ -422,14 +435,19 @@
                         try { mainController =  SSE.getController('Main'); } catch(e) {}
                     }
                 }
-			    if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
-                    //window.localStorage.setItem('macros', JSON.stringify(mainController.editorConfig.macros));
+                if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
                     pluginData.setAttribute("macros", mainController.editorConfig.macros);
-			    }
+                }
+                
+                if(mainController && mainController.editorConfig && typeof(mainController.editorConfig.laudoEstruturado) !== 'undefined') {
+                    pluginData.setAttribute("laudoEstruturado", mainController.editorConfig.laudoEstruturado);
+                }
                 
                 window.g_asc_plugins.run(guidConstrutorDeLaudo, 0, pluginData, true);
             }	
         }
+        */
+
         /*
         function sendExternalPluginMessage(o, event){
             if(o.frameEditorId){
@@ -439,6 +457,8 @@
             }		
         }
         */
+
+        /*
         function replaceMacrosOnlyoffice()
         {			
             var dataMessage = {
@@ -454,7 +474,8 @@
                 if (_iframe)
                     _iframe.contentWindow.postMessage(JSON.stringify(dataMessage), "*");
             }	
-        }        
+        }
+        */      
     </script>
 </body>
 </html>

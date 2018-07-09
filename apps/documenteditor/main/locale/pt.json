@@ -1632,5 +1632,6 @@
   "DE.Views.Toolbar.txtScheme6": "Concurso",
   "DE.Views.Toolbar.txtScheme7": "Patrimônio Líquido",
   "DE.Views.Toolbar.txtScheme8": "Fluxo",
-  "DE.Views.Toolbar.txtScheme9": "Fundição"
+  "DE.Views.Toolbar.txtScheme9": "Fundição",
+  "DE.Views.DocumentHolder.shortcutText": "Adicionar como atalho"
 }

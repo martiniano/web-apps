@@ -304,11 +304,13 @@
                 sendExternalPluginMessage(o, event);
             }
             */
+            /*
             if(o.type == 'replaceMacrosOnlyoffice'){
                 replaceMacrosOnlyoffice();
             }
+            */
+
             if(o.type == 'forceSave'){
-                alert('forceSave');
                 window.AscDesktopEditor_Save();
             }
             if (window.g_asc_plugins){
@@ -320,6 +322,8 @@
                         }
                     });
                 }
+
+                /*
                 if(!window.g_asc_plugins.api.asc_checkNeedCallback('asc_onPluginShow')){
                     window.g_asc_plugins.api.asc_registerCallback('asc_onPluginShow', function(plugin){
                         //console.log("xxxxxxxx");  
@@ -349,8 +353,10 @@
                 if(o.extra == 'startPluginConstrutorDeLaudo'){
                     startPluginConstrutorDeLaudo();
                 }
+                */
             }
         }
+        /*
         function startPluginConstrutorDeLaudo(){
             var plugin = window.g_asc_plugins.getPluginByGuid(guidConstrutorDeLaudo);
             if (!plugin)
@@ -366,13 +372,18 @@
                     }
                 }
 			    if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
-                    //window.localStorage.setItem('macros', JSON.stringify(mainController.editorConfig.macros));
                     pluginData.setAttribute("macros", mainController.editorConfig.macros);
+                }
+                
+                if(mainController && mainController.editorConfig && typeof(mainController.editorConfig.laudoEstruturado) !== 'undefined') {
+                    pluginData.setAttribute("laudoEstruturado", mainController.editorConfig.laudoEstruturado);
 			    }
                 
                 window.g_asc_plugins.run(guidConstrutorDeLaudo, 0, pluginData, true);
             }	
         }
+        */
+
         /*
         function sendExternalPluginMessage(o, event){
             if(o.frameEditorId){
@@ -382,6 +393,8 @@
             }		
         }
         */
+
+        /*
         function replaceMacrosOnlyoffice()
         {			
             var dataMessage = {
@@ -398,6 +411,7 @@
                     _iframe.contentWindow.postMessage(JSON.stringify(dataMessage), "*");
             }	
         }
+        */
                 
     </script>
     <!-- application -->

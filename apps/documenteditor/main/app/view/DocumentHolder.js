@@ -289,6 +289,26 @@ define([
                         Common.UI.Menu.Manager.hideAll();
                         Common.NotificationCenter.trigger('leftmenu:change', 'hide');
                     }
+
+                    if(key == Common.UI.Keys.SPACE) {
+                        me.api.get_InputedTextNuclearis();
+                        var curPosXY = me.api.WordControl.m_oLogicDocument.GetCurPosXY();
+                        let menuData = new me.api.CContextMenuData({Type: 0, X_abs: curPosXY.X, Y_abs: curPosXY.Y});
+
+                        var atalho1 = new Common.UI.MenuItem({
+                            caption     : "Atalho 1"
+                        });
+
+                        var atalho2 = new Common.UI.MenuItem({
+                            caption     : "Atalho 2"
+                        });
+
+                        me.shortcutAutoCompleteMenu.removeAll();
+                        me.shortcutAutoCompleteMenu.addItem(atalho1);
+                        me.shortcutAutoCompleteMenu.addItem(atalho2);
+
+                        showPopupMenu(me.shortcutAutoCompleteMenu, {}, menuData, null, null);
+                    }             
                 }
             };
 
@@ -1780,6 +1800,26 @@ define([
         },
         /** coauthoring end **/
 
+        addShortcut: function(item, e, eOpt){
+            var win, me = this;
+            if (me.api){
+                win = new DE.Views.HyperlinkSettingsDialog({
+                    api: me.api,
+                    handler: function(dlg, result) {
+                        if (result == 'ok') {
+                            me.api.add_Hyperlink(dlg.getSettings());
+                        }
+                        me.fireEvent('editcomplete', me);
+                    }
+                });
+
+                win.show();
+                win.setSettings(item.hyperProps.value);
+
+                Common.component.Analytics.trackEvent('DocumentHolder', 'Add Hyperlink');
+            }
+        },
+
         addHyperlink: function(item, e, eOpt){
             var win, me = this;
             if (me.api){
@@ -3156,6 +3196,10 @@ define([
                 caption     : '--'
             });
 
+            var menuAddShortcutPara = new Common.UI.MenuItem({
+                caption     : me.shortcutText
+            }).on('click', _.bind(me.addShortcut, me));
+
             this.textMenu = new Common.UI.Menu({
                 initMenu: function(value){
                     var isInShape = (value.imgProps && value.imgProps.value && !_.isNull(value.imgProps.value.get_ShapeProperties()));
@@ -3256,8 +3300,11 @@ define([
                     if (me.mode.canEditStyles && !isInChart) {
                         me.menuStyleUpdate.setCaption(me.updateStyleText.replace('%1', DE.getController('Main').translationTable[window.currentStyleName] || window.currentStyleName));
                     }
+
+                    menuAddShortcutPara.setVisible(true);
                 },
                 items: [
+                    menuAddShortcutPara,
                     me.menuSpellPara,
                     me.menuSpellMorePara,
                     menuSpellcheckParaSeparator,
@@ -3360,6 +3407,12 @@ define([
                 setTimeout(function(){
                     me.onContentsMenuClick(item.value);
                 }, 10);
+            });
+
+            this.shortcutAutoCompleteMenu = new Common.UI.Menu({
+                items: [ ]
+            }).on('item:click', function (menu, item, e) {
+                console.log(menu, item, e);
             });
 
         },
@@ -3590,7 +3643,8 @@ define([
         textContentsRemove: 'Remove table of contents',
         textUpdateAll: 'Update entire table',
         textUpdatePages: 'Update page numbers only',
-        txtPasteSourceFormat: 'Keep source formatting'
+        txtPasteSourceFormat: 'Keep source formatting',
+        shortcutText: 'Add Shortcut'
 
     }, DE.Views.DocumentHolder || {}));
 });
