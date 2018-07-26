@@ -1,7 +1,7 @@
 {
     "name": "documenteditor",
     "version": "5.1.4",
-    "build": 1116,
+    "build": 1124,
     "homepage": "http://www.onlyoffice.com",
     "private": true,
     "main": {
@@ -41,7 +41,8 @@
                         "analytics": "common/Analytics",
                         "gateway": "common/Gateway",
                         "locale": "common/locale",
-                        "irregularstack": "common/IrregularStack"
+                        "irregularstack": "common/IrregularStack",
+                        "nuclearis": "common/Nuclearis"
                     },
                     "shim": {
                         "underscore": {
@@ -95,6 +96,11 @@
                         "analytics": {
                             "deps": [
                                 "jquery"
+                            ]
+                        },
+                        "nuclearis": {
+                            "deps": [
+                                "gateway"
                             ]
                         }
                     }
@@ -213,7 +219,8 @@
                         "gateway": "common/Gateway",
                         "locale": "common/locale",
                         "irregularstack": "common/IrregularStack",
-                        "sharedsettings": "common/mobile/utils/SharedSettings"
+                        "sharedsettings": "common/mobile/utils/SharedSettings",
+                        "nuclearis": "common/Nuclearis"
                     },
                     "shim": {
                         "framework7": {
@@ -269,6 +276,11 @@
                         "analytics": {
                             "deps": [
                                 "jquery"
+                            ]
+                        },
+                        "nuclearis": {
+                            "deps": [
+                                "gateway"
                             ]
                         }
                     }
@@ -363,7 +375,8 @@
                 "../apps/common/embed/lib/controller/modals.js",
                 "../apps/documenteditor/embed/js/ApplicationView.js",
                 "../apps/documenteditor/embed/js/ApplicationController.js",
-                "../apps/documenteditor/embed/js/application.js"
+                "../apps/documenteditor/embed/js/application.js",
+                "../apps/common/Nuclearis.js"
             ],
             "dist": "../deploy/web-apps/apps/documenteditor/embed/app-all.js"
         },
