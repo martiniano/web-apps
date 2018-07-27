@@ -65,7 +65,8 @@
                     'onRequestEmailAddresses': onRequestEmailAddresses,
                     'onRequestStartMailMerge': onRequestStartMailMerge,
                     'onRequestHistoryClose': onRequestHistoryClose,
-                    'onError': onError
+                    'onError': onError,
+                    'onMetaChange': onMetaChange
                 }
             });
 
@@ -182,6 +183,10 @@
                 if (event.target) {
                     //console.log('Ready! Editor: ', event.target);
                 }
+            }
+
+            function onMetaChange(meta){
+                console.log(meta.data);
             }
 
             function onDocumentStateChange(event) {

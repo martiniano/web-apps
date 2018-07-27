@@ -63,17 +63,17 @@ define([
             this.template = [
                 '<div class="box">',
                     '<div class="input-row">',
-                        '<label>' + this.textUrl + ' *</label>',
+                        '<label>' + this.textSigla + ' *</label>',
                     '</div>',
-                    '<div id="id-dlg-hyperlink-url" class="input-row" style="margin-bottom: 5px;"></div>',
+                    '<div id="id-dlg-atalho-sigla" class="input-row" style="margin-bottom: 5px;"></div>',
                     '<div class="input-row">',
-                        '<label>' + this.textDisplay + '</label>',
+                        '<label>' + this.textAtalhoText + '</label>',
                     '</div>',
-                    '<div id="id-dlg-hyperlink-display" class="input-row" style="margin-bottom: 5px;"></div>',
+                    '<div id="id-dlg-atalho-atalho-texto" class="input-row" style="margin-bottom: 5px;"></div>',
                     '<div class="input-row">',
-                        '<label>' + this.textTooltip + '</label>',
+                        '<label>' + this.textCategoria + '</label>',
                     '</div>',
-                    '<div id="id-dlg-hyperlink-tip" class="input-row" style="margin-bottom: 5px;"></div>',
+                    '<div id="id-dlg-atalho-categoria" class="input-row" style="margin-bottom: 5px;"></div>',
                 '</div>',
                 '<div class="footer right">',
                     '<button class="btn normal dlg-btn primary" result="ok" style="margin-right: 10px;">' + this.okButtonText + '</button>',
@@ -83,7 +83,6 @@ define([
 
             this.options.tpl = _.template(this.template)(this.options);
             this.api = this.options.api;
-            this._originalProps = null;
 
             Common.UI.Window.prototype.initialize.call(this, this.options);
         },
@@ -94,30 +93,25 @@ define([
             var me = this,
                 $window = this.getChild();
 
-            me.inputUrl = new Common.UI.InputField({
-                el          : $('#id-dlg-hyperlink-url'),
+            me.inputSigla = new Common.UI.InputField({
+                el          : $('#id-dlg-atalho-sigla'),
                 allowBlank  : false,
                 blankError  : me.txtEmpty,
                 style       : 'width: 100%;',
-                validateOnBlur: false,
-                validation  : function(value) {
-                    var urltype = me.api.asc_getUrlType($.trim(value));
-                    me.isEmail = (urltype==2);
-                    return (urltype>0) ? true : me.txtNotUrl;
-                }
+                validateOnBlur: false
             });
 
-            me.inputDisplay = new Common.UI.InputField({
-                el          : $('#id-dlg-hyperlink-display'),
-                allowBlank  : true,
+            me.inputAtalhoTexto = new Common.UI.InputField({
+                el          : $('#id-dlg-atalho-atalho-texto'),
+                allowBlank  : false,
                 validateOnBlur: false,
                 style       : 'width: 100%;'
             }).on('changed:after', function() {
                 me.isTextChanged = true;
             });
 
-            me.inputTip = new Common.UI.InputField({
-                el          : $('#id-dlg-hyperlink-tip'),
+            me.inputCategoria = new Common.UI.InputField({
+                el          : $('#id-dlg-atalho-categoria'),
                 style       : 'width: 100%;',
                 maxLength   : Asc.c_oAscMaxTooltipLength
             });
@@ -131,56 +125,29 @@ define([
 
             var me = this;
             _.delay(function(){
-                me.inputUrl.cmpEl.find('input').focus();
+                me.inputSigla.cmpEl.find('input').focus();
             },500);
         },
 
-        setSettings: function (props) {
-            if (props) {
+        setSettings: function (selectedText) {
+            if (selectedText) {
                 var me = this;
 
-                if (props.get_Value()) {
-                    me.inputUrl.setValue(props.get_Value().replace(new RegExp(" ",'g'), "%20"));
-                } else {
-                    me.inputUrl.setValue('');
-                }
-
-                if (props.get_Text() !== null) {
-                    me.inputDisplay.setValue(props.get_Text());
-                    me.inputDisplay.setDisabled(false);
-                } else {
-                    me.inputDisplay.setValue(this.textDefault);
-                    me.inputDisplay.setDisabled(true);
-                }
+                me.inputAtalhoTexto.setValue(selectedText);
+                me.inputAtalhoTexto.setDisabled(false);
 
                 this.isTextChanged = false;
-
-                me.inputTip.setValue(props.get_ToolTip());
-                me._originalProps = props;
             }
         },
 
         getSettings: function () {
             var me      = this,
-                props   = new Asc.CHyperlinkProperty(),
-                url     = $.trim(me.inputUrl.getValue());
+            props     = {};
 
-            if (! /(((^https?)|(^ftp)):\/\/)|(^mailto:)/i.test(url) )
-                url = ( (me.isEmail) ? 'mailto:' : 'http://' ) + url;
-
-            url = url.replace(new RegExp("%20",'g')," ");
-            props.put_Value(url);
-2
-            if (!me.inputDisplay.isDisabled() && ( this.isTextChanged || _.isEmpty(me.inputDisplay.getValue()))) {
-                if (_.isEmpty(me.inputDisplay.getValue()))
-                    me.inputDisplay.setValue(url);
-                props.put_Text(me.inputDisplay.getValue());
-            } else {
-                props.put_Text(null);
-            }
-
-            props.put_ToolTip(me.inputTip.getValue());
-            props.put_InternalHyperlink(me._originalProps.get_InternalHyperlink());
+            props.sigla = $.trim(me.inputSigla.getValue());
+            props.nome = 'Teste';
+            props.atalho_texto = $.trim(me.inputAtalhoTexto.getValue());
+            props.categoria = $.trim(me.inputCategoria.getValue());
 
             return props;
         },
@@ -199,14 +166,14 @@ define([
         _handleInput: function(state) {
             if (this.options.handler) {
                 if (state == 'ok') {
-                    var checkurl = this.inputUrl.checkValidate(),
-                        checkdisp = this.inputDisplay.checkValidate();
-                    if (checkurl !== true)  {
-                        this.inputUrl.cmpEl.find('input').focus();
+                    var checkSigla = this.inputSigla.checkValidate(),
+                        checkAtalhoTexto = this.inputAtalhoTexto.checkValidate();
+                    if (checkSigla !== true)  {
+                        this.inputSigla.cmpEl.find('input').focus();
                         return;
                     }
-                    if (checkdisp !== true) {
-                        this.inputDisplay.cmpEl.find('input').focus();
+                    if (checkAtalhoTexto !== true) {
+                        this.inputAtalhoTexto.cmpEl.find('input').focus();
                         return;
                     }
                 }
@@ -217,13 +184,13 @@ define([
             this.close();
         },
 
-        textUrl:            'Link to',
-        textDisplay:        'Display',
+        textSigla:          'Sigla',
+        textAtalhoText:     'Texto do atalho',
         cancelButtonText:   'Cancel',
         okButtonText:       'Ok',
         txtEmpty:           'This field is required',
         txtNotUrl:          'This field should be a URL in the format \"http://www.example.com\"',
-        textTooltip:        'ScreenTip text',
+        textCategoria:      'Categoria',
         textDefault:        'Selected text',
         textTitle:          'Atalho Settings'
     }, DE.Views.AtalhoSettingsDialog || {}))

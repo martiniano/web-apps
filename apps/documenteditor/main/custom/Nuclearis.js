@@ -20,6 +20,7 @@ define([
         var _buffer = {startPos: null, endPos: null, text: ''};
         var _atalhoAutoCompleteMenu = null;
         var _renderMenu = true;
+        var _atalhos = null;
 
         var me = this;
 
@@ -55,7 +56,9 @@ define([
 
                 menuAddShortcutPara.menu_item_props = menu_item_props;
 
-                if(menu_item_props.hasSpellCheck){
+                menuAddShortcutPara.menu_item_props.selectedText = _mainController.api.WordControl.m_oLogicDocument.GetSelectedText(true);
+
+                if(menu_item_props.hasSpellCheck && !menu_item_props.spellProps.value.Checked){
                     documentHolderView.textMenu.insertItem(-1, menuAddShortcutPara);
                 }else{
                     documentHolderView.textMenu.insertItem(0, menuAddShortcutPara);
@@ -65,8 +68,12 @@ define([
             _atalhoAutoCompleteMenu = new Common.UI.Menu({
                 items: [ ]
             }).on('item:click', function (menu, item, e) {
-                replaceAtalho(item.value, atalhos[item.value]);
+                replaceAtalho(item.value, _atalhos[item.value]);
             });
+
+            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
+                _atalhos = _mainController.editorConfig.atalhos;		
+            }
         };
 
         var handleDocumentKeyUp = function(event){
@@ -77,7 +84,13 @@ define([
 
         var handleDocumentKeyDown = function(event){
             if (_mainController.api){
-                var key = event.keyCode;
+                //var key = event.keyCode;
+
+                if(_atalhos == null){
+                    if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
+                        _atalhos = _mainController.editorConfig.atalhos;		
+                    }
+                }
                 
                 _renderMenu = true;
                 if(_atalhoAutoCompleteMenu.isVisible()){
@@ -168,10 +181,6 @@ define([
         var searchAtalho = function(e)
         {
             if (_renderMenu && _mainController.api){
-    
-                if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
-                    atalhos = _mainController.editorConfig.atalhos;		
-                }
                 
                 var Doc    = _mainController.api.WordControl.m_oLogicDocument;
         
@@ -198,7 +207,7 @@ define([
 
                         if(_buffer.text.length > 1){
                             var itens = [];
-                            for (var key in atalhos) {
+                            for (var key in _atalhos) {
                                 if (key.indexOf(_buffer.text) != -1) {
                                     itens.push(key);
                                 }
@@ -256,22 +265,24 @@ define([
         $(document).on('keydown', handleDocumentKeyDown);
 
         var adicionarAtalhoDialog = function(item, e, eOpt){
-            var win, me = this;
+            var win;
+            var application = _mainController.getApplication();
+            var documentHolderView =  application.getController('DocumentHolder').getView('DocumentHolder');
             if (_mainController.api){
                 win = new DE.Views.AtalhoSettingsDialog({
                     api: _mainController.api,
                     handler: function(dlg, result) {
                         if (result == 'ok') {
-                            _mainController.api.add_Hyperlink(dlg.getSettings());
+                            var _props = dlg.getSettings();
+                            Common.Gateway.metaChange({type: 'adicionarAtalho',props:  _props});
+                            _atalhos[_props.sigla] = _props.atalho_texto; 
                         }
-                        me.fireEvent('editcomplete', me);
+                        documentHolderView.fireEvent('editcomplete', documentHolderView);
                     }
                 });                
 
-                console.log(item.menu_item_props);
-
                 win.show();
-                win.setSettings(item.menu_item_props.paraProps.value);
+                win.setSettings(item.menu_item_props.selectedText);
             }
         };
 
