@@ -67,13 +67,16 @@ define([
                     '</div>',
                     '<div id="id-dlg-atalho-sigla" class="input-row" style="margin-bottom: 5px;"></div>',
                     '<div class="input-row">',
+                        '<label>' + this.textNome + '</label>',
+                    '</div>',
+                    '<div id="id-dlg-atalho-nome" class="input-row" style="margin-bottom: 5px;"></div>',
+                    '<div class="input-row">',
                         '<label>' + this.textAtalhoText + '</label>',
                     '</div>',
                     '<div id="id-dlg-atalho-atalho-texto" class="input-row" style="margin-bottom: 5px;"></div>',
-                    '<div class="input-row">',
-                        '<label>' + this.textCategoria + '</label>',
-                    '</div>',
-                    '<div id="id-dlg-atalho-categoria" class="input-row" style="margin-bottom: 5px;"></div>',
+
+                    '<label class="header">' + this.textCategoria + '</label>',
+                    '<div id="id-categoria-combo" class="input-group-nr" style="margin-bottom:15px;"></div>',
                 '</div>',
                 '<div class="footer right">',
                     '<button class="btn normal dlg-btn primary" result="ok" style="margin-right: 10px;">' + this.okButtonText + '</button>',
@@ -87,6 +90,10 @@ define([
             Common.UI.Window.prototype.initialize.call(this, this.options);
         },
 
+        prependSpaces: function(str, len){
+            return (new Array(len).join(' ') + str);
+        },
+
         render: function() {
             Common.UI.Window.prototype.render.call(this);
 
@@ -98,22 +105,50 @@ define([
                 allowBlank  : false,
                 blankError  : me.txtEmpty,
                 style       : 'width: 100%;',
+                maxLength   : 7,
+                validateOnBlur: false
+            });
+
+            me.inputNome = new Common.UI.InputField({
+                el          : $('#id-dlg-atalho-nome'),
+                allowBlank  : false,
+                blankError  : me.txtEmpty,
+                style       : 'width: 100%;',
+                maxLength   : 64,
                 validateOnBlur: false
             });
 
             me.inputAtalhoTexto = new Common.UI.InputField({
                 el          : $('#id-dlg-atalho-atalho-texto'),
                 allowBlank  : false,
+                blankError  : me.txtEmpty,
                 validateOnBlur: false,
                 style       : 'width: 100%;'
             }).on('changed:after', function() {
                 me.isTextChanged = true;
             });
 
-            me.inputCategoria = new Common.UI.InputField({
-                el          : $('#id-dlg-atalho-categoria'),
-                style       : 'width: 100%;',
-                maxLength   : Asc.c_oAscMaxTooltipLength
+            var listItems = [];
+
+            for(var index in me.options.categoriasDeAtalho) { 
+                if (me.options.categoriasDeAtalho.hasOwnProperty(index)) {
+                    var cat = me.options.categoriasDeAtalho[index];
+                    listItems.push({
+                        value: index,
+                        displayValue: cat
+                    });
+                }
+             }
+
+            //console.log(listItems, this.$window);
+
+            me.cmbCategoria = new Common.UI.ComboBox({
+                el: $('#id-categoria-combo', this.$window),
+                menuStyle: 'min-width: 218px; max-height: 200px;',
+                cls: 'input-group-nr',
+                menuCls: 'scrollable-menu',
+                data: listItems,
+                editable: false
             });
 
             $window.find('.dlg-btn').on('click', _.bind(this.onBtnClick, this));
@@ -145,9 +180,9 @@ define([
             props     = {};
 
             props.sigla = $.trim(me.inputSigla.getValue());
-            props.nome = 'Teste';
+            props.nome = $.trim(me.inputNome.getValue());;
             props.atalho_texto = $.trim(me.inputAtalhoTexto.getValue());
-            props.categoria = $.trim(me.inputCategoria.getValue());
+            props.categoria = $.trim(me.cmbCategoria.getValue());
 
             return props;
         },
@@ -167,7 +202,9 @@ define([
             if (this.options.handler) {
                 if (state == 'ok') {
                     var checkSigla = this.inputSigla.checkValidate(),
-                        checkAtalhoTexto = this.inputAtalhoTexto.checkValidate();
+                        checkAtalhoTexto = this.inputAtalhoTexto.checkValidate(),
+                        checkAtalhoNome= this.inputNome.checkValidate(),
+                        checkAtalhoCategoria = this.cmbCategoria.checkValidate();
                     if (checkSigla !== true)  {
                         this.inputSigla.cmpEl.find('input').focus();
                         return;
@@ -176,6 +213,15 @@ define([
                         this.inputAtalhoTexto.cmpEl.find('input').focus();
                         return;
                     }
+                    if (checkAtalhoNome !== true) {
+                        this.checkAtalhoNome.cmpEl.find('input').focus();
+                        return;
+                    }
+                    /*
+                    if (checkAtalhoCategoria !== true) {
+                        this.checkAtalhoCategoria.cmpEl.find('input').focus();
+                        return;
+                    }*/
                 }
 
                 this.options.handler.call(this, this, state);
@@ -186,12 +232,11 @@ define([
 
         textSigla:          'Sigla',
         textAtalhoText:     'Texto do atalho',
-        cancelButtonText:   'Cancel',
+        cancelButtonText:   'Cancelar',
         okButtonText:       'Ok',
-        txtEmpty:           'This field is required',
-        txtNotUrl:          'This field should be a URL in the format \"http://www.example.com\"',
+        txtEmpty:           'Este campo é obrigatório',
         textCategoria:      'Categoria',
-        textDefault:        'Selected text',
-        textTitle:          'Atalho Settings'
+        textNome:           'Nome',
+        textTitle:          'Adicionar Atalho'
     }, DE.Views.AtalhoSettingsDialog || {}))
 });

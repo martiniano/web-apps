@@ -21,6 +21,7 @@ define([
         var _atalhoAutoCompleteMenu = null;
         var _renderMenu = true;
         var _atalhos = null;
+        var _categoriasDeAtalho = null;
 
         var me = this;
 
@@ -90,7 +91,7 @@ define([
                     if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
                         _atalhos = _mainController.editorConfig.atalhos;		
                     }
-                }
+                } 
                 
                 _renderMenu = true;
                 if(_atalhoAutoCompleteMenu.isVisible()){
@@ -268,17 +269,26 @@ define([
             var win;
             var application = _mainController.getApplication();
             var documentHolderView =  application.getController('DocumentHolder').getView('DocumentHolder');
+            
+            if(_categoriasDeAtalho == null){
+                if(_mainController && _mainController.editorConfig && _mainController.editorConfig.categoriasDeAtalho){
+                    _categoriasDeAtalho = _mainController.editorConfig.categoriasDeAtalho;		
+                }
+            }       
+            
             if (_mainController.api){
                 win = new DE.Views.AtalhoSettingsDialog({
                     api: _mainController.api,
                     handler: function(dlg, result) {
                         if (result == 'ok') {
                             var _props = dlg.getSettings();
+                            console.log(_props);
                             Common.Gateway.metaChange({type: 'adicionarAtalho',props:  _props});
                             _atalhos[_props.sigla] = _props.atalho_texto; 
                         }
                         documentHolderView.fireEvent('editcomplete', documentHolderView);
-                    }
+                    },
+                    categoriasDeAtalho: _categoriasDeAtalho
                 });                
 
                 win.show();
