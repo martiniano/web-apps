@@ -18,6 +18,7 @@ define([
         var _store = {};
         var _mainController = null;
         var _buffer = {startPos: null, endPos: null, text: ''};
+        var _itensBuffer = [];
         var _atalhoAutoCompleteMenu = null;
         var _renderMenu = true;
         var _atalhos = null;
@@ -97,22 +98,25 @@ define([
                 if(_atalhoAutoCompleteMenu.isVisible()){
                     //Top Arrow or Bottom Arrow
                     if(event.keyCode == Common.UI.Keys.UP || event.keyCode == Common.UI.Keys.DOWN){ 
-                         _atalhoAutoCompleteMenu.cmpEl.focus();
+                        event.preventDefault();
+                        _atalhoAutoCompleteMenu.cmpEl.focus();
                          _atalhoAutoCompleteMenu.onAfterKeydownMenu(event);
                          _renderMenu = false;
+                         return false;
                     }
 
                     //Esc
                     if(event.keyCode == Common.UI.Keys.ESC){
                         _atalhoAutoCompleteMenu.hide();
                         _renderMenu = false;
+                        _itensBuffer = [];
                     }
 
                     //Enter
                     if(event.keyCode == Common.UI.Keys.RETURN){
                         _atalhoAutoCompleteMenu.hide();
                         _renderMenu = false;
-                        console.log('enter');
+                        _itensBuffer = [];
                     }
                 }
             }
@@ -123,7 +127,7 @@ define([
             if (!_.isUndefined(menu)  && menu !== null){
                 Common.UI.Menu.Manager.hideAll();
 
-                var showPoint = [event.get_X(), event.get_Y()],
+                var showPoint = [event.X_abs, event.Y_abs],
                     menuContainer = $(documentHolderView.$el).find(Common.Utils.String.format('#menu-container-{0}', menu.id));
 
                 if (!menu.rendered) {
@@ -149,9 +153,22 @@ define([
                     menu.alignPosition();
                 }
 
-                //_.delay(function() {
-                    //menu.cmpEl.focus();
-                //}, 10);
+                _.delay(function() {
+                    menu.cmpEl.focus();
+                }, 10);
+
+                menu.items.forEach(function(item){
+                    var modalParents = item.cmpEl.closest("div[id^='menu-container-asc']");
+
+                    item.cmpEl.tooltip({
+                        title       : _atalhos[item.value],
+                        placement   : 'bottom-left'
+                    });
+
+                    if (modalParents.length > 0) {
+                        item.cmpEl.data('bs.tooltip').tip().css('z-index', parseInt(modalParents.css('z-index')) + 10);
+                    }
+                });
 
                 documentHolderView.currentMenu = menu;
             }
@@ -162,14 +179,15 @@ define([
             var PageIndex = _mainController.api.WordControl.m_oLogicDocument.Controller.GetCurPage();
             var ConvertedPos = _mainController.api.WordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(curPosXY.X, curPosXY.Y, PageIndex);
             
-            let menuData = new _mainController.api.CContextMenuData({Type: 0, X_abs: ConvertedPos.X, Y_abs: ConvertedPos.Y});
+            var menuData = {Type: 0, X_abs: ConvertedPos.X, Y_abs: ConvertedPos.Y};
 
             _atalhoAutoCompleteMenu.removeAll();
             for(var i = 0; i < itens.length ;i++){
                 var menuItemAtalho = new Common.UI.MenuItem({
-                    caption: itens[i],
-                    value: itens[i]
+                    caption: Common.Utils.String.ellipsis(itens[i] + ' - ' + _atalhos[itens[i]], 80, true),
+                    value: itens[i],
                 });
+
                 _atalhoAutoCompleteMenu.addItem(menuItemAtalho);
             }
 
@@ -193,14 +211,14 @@ define([
                 if(paraRun.Class.Content && paraRun.Position >= 1){
                     var pos = paraRun.Position - 1;
 
-                    if(paraRun.Class.Content[pos].Type == para_Space){
+                    if(paraRun.Class.Content[pos].Type == AscCommonWord.ParaSpace.prototype.Get_Type()){
                         _buffer.startPos = null;
                         _buffer.endPos = null;  
                         _buffer.text = '';          
                     }else{ 
                         _buffer.endPos = pos;
                         _buffer.text = '';
-                        while(pos >= 0 && paraRun.Class.Content[pos].Type != null && paraRun.Class.Content[pos].Type == para_Text){
+                        while(pos >= 0 && paraRun.Class.Content[pos].Type != null && paraRun.Class.Content[pos].Type == AscCommonWord.ParaText.prototype.Get_Type()){
                             _buffer.text = String.fromCharCode(paraRun.Class.Content[pos].Value) + _buffer.text;
                             _buffer.startPos = pos;
                             pos--;
@@ -213,14 +231,19 @@ define([
                                     itens.push(key);
                                 }
                             }
+                            
 
                             if(itens.length > 0){
-                                console.log('exibindo');
-                                exibirMenuPopupAtalhos(itens);
+                                if(!_.isEqual(itens, _itensBuffer)){
+                                    //console.log('exibindo');
+                                    _itensBuffer = itens;
+                                    exibirMenuPopupAtalhos(itens);                                    
+                                }
                             }else{
                                 if(_atalhoAutoCompleteMenu.isVisible()){
-                                    console.log('ocultando');
+                                    //console.log('ocultando');
                                     _atalhoAutoCompleteMenu.hide();
+                                    _itensBuffer = [];
                                 }
                             }
                         }
@@ -253,6 +276,8 @@ define([
                     paraRun.Class.RemoveSelection();
 
                     _mainController.api.WordControl.m_oLogicDocument.Recalculate();
+
+                    _itensBuffer = [];
                 }
             }
         };
@@ -282,7 +307,6 @@ define([
                     handler: function(dlg, result) {
                         if (result == 'ok') {
                             var _props = dlg.getSettings();
-                            console.log(_props);
                             Common.Gateway.metaChange({type: 'adicionarAtalho',props:  _props});
                             _atalhos[_props.sigla] = _props.atalho_texto; 
                         }
@@ -316,7 +340,12 @@ define([
             }
             return menu_props;
         };
+
+        var _getAtalhos = function() {
+            return _atalhos;
+        };
         
+        /*
         var _refresh = function() {
             if (!_lsAllowed)
                 Common.Gateway.internalMessage('localstorage', {cmd:'get', keys:_filter});
@@ -349,33 +378,15 @@ define([
             }
         };
 
-        var _getItem = function(name) {
-            if (_lsAllowed)
-                return localStorage.getItem(name);
-            else
-                return _store[name]===undefined ? null : _store[name];
-        };
-
         try {
             var _lsAllowed = !!window.localStorage;
         } catch (e) {
             _lsAllowed = false;
         }
-
+            */
         return {
-            getId: function() {
-                return _storeName;
-            },
-            setId: function(name) {
-                _storeName = name;
-            },
-            getItem: _getItem,
-            setItem: _setItem,
-            setKeysFilter: function(value) {
-                _filter = value;
-            },
-            sync: _refresh,
-            save: _save
+            getAtalhos: _getAtalhos
         };
+        
     })();
 });

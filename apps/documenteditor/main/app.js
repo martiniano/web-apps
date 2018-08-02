@@ -67,7 +67,7 @@ require.config({
         analytics       : 'common/Analytics',
         gateway         : 'common/Gateway',
         locale          : 'common/locale',
-        irregularstack  : 'common/IrregularStack'
+        irregularstack  : 'common/IrregularStack',
     },
 
     shim: {
@@ -135,7 +135,7 @@ require([
     'api',
     'analytics',
     'gateway',
-    'locale'
+    'locale',
 ], function (Backbone, Bootstrap, Core) {
     Backbone.history.start();
 
@@ -196,7 +196,9 @@ require([
         ,'common/main/lib/controller/ExternalDiagramEditor'
         ,'common/main/lib/controller/ExternalMergeEditor'
         ,'common/main/lib/controller/ReviewChanges'
+        ,'documenteditor/main/custom/Nuclearis'
     ], function() {
+        window.compareVersions = true;
         app.start();
     });
 }, function(err) {

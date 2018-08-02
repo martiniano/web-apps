@@ -67,15 +67,15 @@ define([
                     '</div>',
                     '<div id="id-dlg-atalho-sigla" class="input-row" style="margin-bottom: 5px;"></div>',
                     '<div class="input-row">',
-                        '<label>' + this.textNome + '</label>',
+                        '<label>' + this.textNome + ' *</label>',
                     '</div>',
                     '<div id="id-dlg-atalho-nome" class="input-row" style="margin-bottom: 5px;"></div>',
                     '<div class="input-row">',
-                        '<label>' + this.textAtalhoText + '</label>',
+                        '<label>' + this.textAtalhoText + ' *</label>',
                     '</div>',
                     '<div id="id-dlg-atalho-atalho-texto" class="input-row" style="margin-bottom: 5px;"></div>',
 
-                    '<label class="header">' + this.textCategoria + '</label>',
+                    '<label class="header">' + this.textCategoria + ' *</label>',
                     '<div id="id-categoria-combo" class="input-group-nr" style="margin-bottom:15px;"></div>',
                 '</div>',
                 '<div class="footer right">',
@@ -140,8 +140,6 @@ define([
                 }
              }
 
-            //console.log(listItems, this.$window);
-
             me.cmbCategoria = new Common.UI.ComboBox({
                 el: $('#id-categoria-combo', this.$window),
                 menuStyle: 'min-width: 218px; max-height: 200px;',
@@ -204,7 +202,8 @@ define([
                     var checkSigla = this.inputSigla.checkValidate(),
                         checkAtalhoTexto = this.inputAtalhoTexto.checkValidate(),
                         checkAtalhoNome= this.inputNome.checkValidate(),
-                        checkAtalhoCategoria = this.cmbCategoria.checkValidate();
+                        cmbSelectedRecord = this.cmbCategoria.getSelectedRecord();
+
                     if (checkSigla !== true)  {
                         this.inputSigla.cmpEl.find('input').focus();
                         return;
@@ -217,11 +216,11 @@ define([
                         this.checkAtalhoNome.cmpEl.find('input').focus();
                         return;
                     }
-                    /*
-                    if (checkAtalhoCategoria !== true) {
-                        this.checkAtalhoCategoria.cmpEl.find('input').focus();
+                    
+                    if (cmbSelectedRecord === null) {
+                        this.cmbCategoria.cmpEl.find('input').focus();
                         return;
-                    }*/
+                    }
                 }
 
                 this.options.handler.call(this, this, state);
