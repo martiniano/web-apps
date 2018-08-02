@@ -14,8 +14,8 @@ define([
     'documenteditor/main/custom/AtalhoSettingsDialog',
 ], function ($, _, Backbone, gateway) {
     Common.Nuclearis = new (function() {
-        var _storeName, _filter;
-        var _store = {};
+        var _guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
+        var _guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
         var _mainController = null;
         var _buffer = {startPos: null, endPos: null, text: ''};
         var _itensBuffer = [];
@@ -27,7 +27,12 @@ define([
         var me = this;
 
         var onInternalCommand = function(data) {
-            console.log(data);
+            //console.log(data);
+            
+            //Force Save
+            if(data != null && data.command == 'forceSave'){
+                window.AscDesktopEditor_Save();
+            }
         };
 
         var onInit = function(loadConfig) {
@@ -75,6 +80,15 @@ define([
 
             if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
                 _atalhos = _mainController.editorConfig.atalhos;		
+            }
+
+            //Habilita plugin construtor de laudo ao se fechar qualquer outro plugin
+            if(!_mainController.api.asc_checkNeedCallback('asc_onPluginClose')){
+                _mainController.api.asc_registerCallback('asc_onPluginClose', function(plugin){
+                    if(plugin.guid !== _guidConstrutorDeLaudo){					
+                        startPluginConstrutorDeLaudo();
+                    }
+                });
             }
         };
 
@@ -344,6 +358,29 @@ define([
         var _getAtalhos = function() {
             return _atalhos;
         };
+
+        var startPluginConstrutorDeLaudo = function(){
+            var plugin = window.g_asc_plugins.getPluginByGuid(_guidConstrutorDeLaudo);
+            if (!plugin)
+                return;
+            var isRunned = (window.g_asc_plugins.runnedPluginsMap[_guidConstrutorDeLaudo] !== undefined) ? true : false;	
+            if(!isRunned){
+                
+                var pluginData = new window.Asc.CPluginData();
+                
+                /*
+			    if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
+                    pluginData.setAttribute("macros", mainController.editorConfig.macros);
+                }
+                
+                if(mainController && mainController.editorConfig && typeof(mainController.editorConfig.laudoEstruturado) !== 'undefined') {
+                    pluginData.setAttribute("laudoEstruturado", mainController.editorConfig.laudoEstruturado);
+                }
+                */
+                
+                window.g_asc_plugins.run(_guidConstrutorDeLaudo, 0, pluginData, true);
+            }	
+        }
         
         /*
         var _refresh = function() {
