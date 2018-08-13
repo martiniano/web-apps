@@ -26,14 +26,290 @@ define([
 
         var me = this;
 
-        var onInternalCommand = function(data) {
-            //console.log(data);
+        var onInternalCommand = function(objData) 
+        {
+            //console.log(objData);
             
             //Force Save
-            if(data != null && data.command == 'forceSave'){
+            if(objData != null && objData.command == 'forceSave')
+            {
                 window.AscDesktopEditor_Save();
             }
+
+            //Inserir Assinatura
+            if(objData != null && objData.command == 'inserirAssinatura')
+            {
+                //_mainController.api.asc_addSignatureLine('Anderson', 'fdafds','fdaffdaf dafda da','anderson martniano',30, 20, '');
+                if(objData.data != null)
+                {
+
+                    //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
+                    if(objData.data.imagem !== null && objData.data.imagem !== '')
+                    {
+                        urltoFile(objData.data.imagem, 'assinatura.png').then(function(file)
+                        {
+                            var Api             = window.g_asc_plugins.api;
+                            var documentId      = Api.DocInfo.get_Id();
+                            var documentUserId  = Api.DocInfo.get_UserId();
+                            var jwt             = Api.CoAuthoringApi.get_jwt();
+
+                            AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
+                            {
+                                if (Asc.c_oAscError.ID.No !== error)
+                                {
+                                    Api.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+                                }
+                                else
+                                {
+                                    objData.data.imagem = urls[0];
+
+                                    if(Api.ImageLoader)
+                                    {
+                                        var oApi = Api;
+                                        Api.ImageLoader.LoadImagesWithCallback(urls, function()
+                                        {
+                                            var aImages = [];
+                                            for(var i = 0; i < urls.length; ++i){
+                                                var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
+                                                if(_image){
+                                                    aImages.push(_image);
+                                                }
+                                            }
+
+                                            inserirAssinatura(objData.data);
+                                        }, []);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    else
+                    {
+                        inserirAssinatura(objData.data);
+                    }
+                }
+
+            }
         };
+
+        //return a promise that resolves with a File instance
+        var urltoFile = function(url, filename, mimeType){
+            mimeType = mimeType || (url.match(/^data:([^;]+);/)||'')[1];
+            return (fetch(url)
+                .then(function(res){return res.arrayBuffer();})
+                .then(function(buf){return new File([buf], filename, {type:mimeType});})
+            );
+        }
+
+        var inserirBlockAssinatura = function(Api, oParagraph, data)
+        {
+            var extras = data.extras != null ? data.extras : [];
+            var width = data.width != null ? data.width : 300;
+            var height = data.height != null ? data.height : 200;
+
+            var imageWidth = Math.round(width / 96) * 914400;
+            var imageHeight = Math.round(height / 96) * 914400;
+            
+            if(data.imagem !== null && data.imagem !== ''){
+                var oAssinatura = Api.CreateImage(data.imagem, imageWidth, imageHeight);
+                oAssinatura.SetWrappingStyle('topAndBottom');
+                oAssinatura.SetHorAlign("column", "center");
+                oParagraph.AddDrawing(oAssinatura);
+            }
+            
+            for(var i = 0; i < extras.length;i++){
+                var oRun = Api.CreateRun();
+                oRun.SetColor(0, 0, 0);
+                oRun.AddText(extras[i]);
+                if(i > 0){
+                    oParagraph.AddLineBreak();
+                }
+                oParagraph.AddElement(oRun);
+                
+            }
+                
+            oParagraph.SetJc('center');
+    
+            return oParagraph;
+        }
+
+        var inserirAssinatura = function(data){
+            var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
+            var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
+            var Api = window.g_asc_plugins.api;
+
+            var assinaturaContentControl = null;
+            contentControls.forEach(function(control){
+                if(control.Tag == 'ASSINATURAS'){   
+                    assinaturaContentControl = logicDocument.GetContentControl(control.InternalId);
+                }
+            });
+
+            //Não existe content control de Assinatura - vamos criar.
+            if(assinaturaContentControl == null){
+                var type = c_oAscSdtLevelType.Block; //Block
+                
+                var _content_control_pr = new AscCommon.CContentControlPr();
+                _content_control_pr.Tag = "ASSINATURAS";
+                _content_control_pr.Lock = 3;
+
+                var _obj = Api.asc_AddContentControl(type, _content_control_pr);
+                if (!_obj)
+                    return undefined;
+
+                //var _obj = Api.pluginMethod_AddContentControl(type, {"Lock" : 3});
+
+                logicDocument.ClearContentControl(_obj.InternalId);
+
+                //assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
+
+                //assinaturaContentControl.Content.ClearContent();
+
+                var scriptAssinatura = createScriptBlockToReplace("ASSINATURAS", "ASSINATURAS", true, _obj.InternalId);
+
+                Api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
+                
+                assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
+            }       
+
+            //var oDocument = Api.GetDocument();
+            //oDocument.InsertWatermark('RASCUNHO', true);
+
+            var firstElement = assinaturaContentControl.Content.GetElement(0);
+
+            //Se o primeiro elemento do content control de assinatura for um paragrafo troca para uma tabela
+            /*
+            if(firstElement.GetType() == AscCommonWord.type_Paragraph){
+                apiOParagraph = Api.private_CreateApiParagraph(firstElement);
+                apiOParagraph.RemoveAllElements();
+                apiOParagraph.AddText("Hello world!");
+
+                console.log(assinaturaContentControl);
+
+                var oParagraph = assinaturaContentControl.Content.GetElement(0);
+            }
+            */
+
+            if(firstElement != null && firstElement.GetType() == AscCommonWord.type_Table){
+                var tblAssinaturas = firstElement;
+                //Verificar se não nenhuma assinatura até o momento
+                var pCell00 = tblAssinaturas.Get_Row(0).Get_Cell(0).GetContent(0).GetElement(0);
+                if(pCell00.GetText().trim() == 'ASSINATURAS'){
+                    var pCell00Api = Api.private_CreateApiParagraph(pCell00)
+                    pCell00Api.RemoveAllElements();
+                    inserirBlockAssinatura(Api, pCell00Api, data);
+                }else{
+                    //Já existe assinatura - adicionar nova coluna (célula) no final
+                    var row = tblAssinaturas.Get_RowsCount() - 1;
+                    var cell = tblAssinaturas.Get_Row(row).Get_CellsCount() - 1;
+
+                    foundedCellEmpty = false;
+                    //Procura por alguma célula vazia, se encontra coloca a assinatura nela;
+                    for(var i = 0;i < tblAssinaturas.Get_RowsCount();i++){
+                        for(var j = 0; j < tblAssinaturas.Get_Row(i).Get_CellsCount();j++){
+                            var pCellIJ = tblAssinaturas.Get_Row(i).Get_Cell(j).GetContent(0).GetElement(0);
+                            if(pCellIJ.GetAllDrawingObjects().length == 0){
+                                foundedCellEmpty = true;
+                                row = i;
+                                cell = j;
+                                break;
+                            }
+                        }
+
+                        if(foundedCellEmpty) break;
+                    }
+
+                    if(!foundedCellEmpty){
+                        logicDocument.Start_SilentMode();
+                        tblAssinaturas.private_RecalculateGrid();
+                        tblAssinaturas.private_UpdateCellsGrid();
+
+                        var newCell = null;
+                        //Se já tiver 3 assinaturas em uma linha, adiciona uma nova linha abaixo
+                        if(tblAssinaturas.Get_Row(row).Get_CellsCount() == 2){
+                            newCell = tblAssinaturas.Content[tblAssinaturas.Content.length - 1].Get_Cell(0);
+                            tblAssinaturas.RemoveSelection();
+                            tblAssinaturas.CurCell = newCell;
+                            tblAssinaturas.AddTableRow(false);
+                            row++;
+                            cell = 0;
+                        }else{
+                            newCell = tblAssinaturas.Content[row].Get_Cell(tblAssinaturas.Content[row].Get_CellsCount() - 1);
+                            tblAssinaturas.RemoveSelection();
+                            tblAssinaturas.CurCell = newCell;
+                            tblAssinaturas.AddTableColumn(false);
+                            cell++;
+                        }
+
+                        logicDocument.End_SilentMode(false);
+                    }
+
+                    var lastCellEmpty = tblAssinaturas.Get_Row(row).Get_Cell(cell);
+
+                    var pLastCellEmpty = lastCellEmpty.GetContent(0).GetElement(0);
+                    var pLastCellEmptyApi = Api.private_CreateApiParagraph(pLastCellEmpty)
+                    //pNewCellApi.RemoveAllElements();
+                    inserirBlockAssinatura(Api, pLastCellEmptyApi, data);
+                }
+            }
+
+            Api.asc_Recalculate();
+
+            var config = {
+                closable: false,
+                title: "Sucesso",
+                msg: "Documento assinado com sucesso!",
+                iconCls: 'info',
+                buttons: ['ok']
+            };
+            
+            Common.UI.alert(config);
+            
+            //_contentControl.Content.MoveCursorToEndPos(true, false);                   
+            
+            //_mainController.api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
+
+
+        }
+
+        var createScriptBlockToReplace =  function(Tag, Label, isTextField, InternalId)
+        {		
+            if(Tag != 'ASSINATURAS'){
+                var _script = "\r\n\
+                    var oDocument = Api.GetDocument();\r\n\
+                    var oParagraph = Api.CreateParagraph();\r\n\
+                    var oRun = oParagraph.AddText(\'" + Label + "\');\r\n\
+                    oRun.SetColor(255,255,255);\r\n\
+                    oRun.SetShd(\"clear\"," + (isTextField ? "0, 0, 255" : "255, 0, 0" ) + ");\r\n\
+                    oDocument.InsertContent([oParagraph], true);\r\n\
+                    ";
+            }else{
+                var _script = "\r\n\
+                    var oDocument = Api.GetDocument();\r\n\
+                    var tblAssinatura = Api.CreateTable(1, 1);\r\n\
+                    tblAssinatura.SetWidth('percent', 100);\r\n\
+                    var pCell00 = tblAssinatura.GetRow(0).GetCell(0).GetContent().GetElement(0);\r\n\
+                    pCell00.SetJc('center');\r\n\
+                    var oRun = pCell00.AddText(\'" + Label + "\');\r\n\
+                    oRun.SetColor(255,255,255);\r\n\
+                    oRun.SetShd(\"clear\"," + (isTextField ? "0, 0, 255" : "255, 0, 0" ) + ");\r\n\
+                    oDocument.InsertContent([tblAssinatura], true);\r\n\
+                    ";
+            }
+            _script = _script.replaceAll("\r\n", "");
+            _script = _script.replaceAll("\n", "");
+            
+            var _scriptObject = {
+                "Props" : {
+                    "Tag"        : Tag,
+                    "Lock"       : 3,
+                    "InternalId" : InternalId
+                },
+                "Script" : _script
+            };
+            
+            return _scriptObject;
+        }
 
         var onInit = function(loadConfig) {
         
@@ -382,6 +658,11 @@ define([
             }	
         }
         
+        String.prototype.replaceAll = function(search, replacement) {
+            var target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
+
         /*
         var _refresh = function() {
             if (!_lsAllowed)
