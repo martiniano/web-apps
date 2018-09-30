@@ -23,6 +23,14 @@ define([
         var _renderMenu = true;
         var _atalhos = null;
         var _categoriasDeAtalho = null;
+        var _assinaturasPorLinha = 2;
+        var _infoObj = {
+            PageCount       : 0,
+            WordsCount      : 0,
+            ParagraphCount  : 0,
+            SymbolsCount    : 0,
+            SymbolsWSCount  : 0
+        };
 
         var me = this;
 
@@ -42,7 +50,6 @@ define([
                 //_mainController.api.asc_addSignatureLine('Anderson', 'fdafds','fdaffdaf dafda da','anderson martniano',30, 20, '');
                 if(objData.data != null)
                 {
-
                     //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
                     if(objData.data.imagem !== null && objData.data.imagem !== '')
                     {
@@ -88,7 +95,13 @@ define([
                         inserirAssinatura(objData.data);
                     }
                 }
+            }
 
+            
+            //getDocInfo
+            if(objData != null && objData.command == 'getDocInfo')
+            {
+                window.g_asc_plugins.api.startGetDocInfo();
             }
         };
 
@@ -104,11 +117,8 @@ define([
         var inserirBlockAssinatura = function(Api, oParagraph, data)
         {
             var extras = data.extras != null ? data.extras : [];
-            var width = data.width != null ? data.width : 300;
-            var height = data.height != null ? data.height : 200;
-
-            var imageWidth = Math.round(width / 96) * 914400;
-            var imageHeight = Math.round(height / 96) * 914400;
+            var imageWidth = data.width != null ? data.width : 300;
+            var imageHeight = data.height != null ? data.height : 200;
             
             if(data.imagem !== null && data.imagem !== ''){
                 var oAssinatura = Api.CreateImage(data.imagem, imageWidth, imageHeight);
@@ -125,7 +135,6 @@ define([
                     oParagraph.AddLineBreak();
                 }
                 oParagraph.AddElement(oRun);
-                
             }
                 
             oParagraph.SetJc('center');
@@ -137,6 +146,12 @@ define([
             var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
             var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
             var Api = window.g_asc_plugins.api;
+
+            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
+                _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
+            }else{
+                _assinaturasPorLinha = 2;
+            }
 
             var assinaturaContentControl = null;
             contentControls.forEach(function(control){
@@ -225,8 +240,9 @@ define([
                         tblAssinaturas.private_UpdateCellsGrid();
 
                         var newCell = null;
-                        //Se já tiver 3 assinaturas em uma linha, adiciona uma nova linha abaixo
-                        if(tblAssinaturas.Get_Row(row).Get_CellsCount() == 2){
+                        //Se já tiver n assinaturas em uma linha, adiciona uma nova linha abaixo
+                        console.log(_assinaturasPorLinha);
+                        if(tblAssinaturas.Get_Row(row).Get_CellsCount() == _assinaturasPorLinha){
                             newCell = tblAssinaturas.Content[tblAssinaturas.Content.length - 1].Get_Cell(0);
                             tblAssinaturas.RemoveSelection();
                             tblAssinaturas.CurCell = newCell;
@@ -366,6 +382,39 @@ define([
                     }
                 });
             }
+
+            if(!_mainController.api.asc_checkNeedCallback('asc_onPluginShow')){
+                _mainController.api.asc_registerCallback('asc_onPluginShow', function(plugin){
+                    if(plugin.guid === _guidNuclearisMacros){					
+                        var _plugin = window.g_asc_plugins.runnedPluginsMap[_guidNuclearisMacros];
+                        if (!_plugin)
+                            return;
+
+                        _plugin.startData.setAttribute("macros", _mainController.editorConfig.macros);
+                        _plugin.startData.setAttribute("macrosDeQuestionario", _mainController.editorConfig.macrosDeQuestionario);
+                    }
+                });
+            }
+
+            //Estatisticas
+            _mainController.api.asc_registerCallback('asc_onDocInfo', function(obj){
+                if (obj) {
+                    if (obj.get_PageCount() > -1)
+                        _infoObj.PageCount = obj.get_PageCount();
+                    if (obj.get_WordsCount() > -1)
+                        _infoObj.WordsCount = obj.get_WordsCount();
+                    if (obj.get_ParagraphCount() > -1)
+                        _infoObj.ParagraphCount = obj.get_ParagraphCount();
+                    if (obj.get_SymbolsCount() > -1)
+                        _infoObj.SymbolsCount = obj.get_SymbolsCount();
+                    if (obj.get_SymbolsWSCount() > -1)
+                        _infoObj.SymbolsWSCount = obj.get_SymbolsWSCount();
+                }
+            });
+
+            _mainController.api.asc_registerCallback('asc_onGetDocInfoEnd', function(){
+                Common.Gateway.metaChange({type: 'docInfo' ,info:  _infoObj});
+            });
         };
 
         var handleDocumentKeyUp = function(event){
