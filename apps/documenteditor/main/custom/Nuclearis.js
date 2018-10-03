@@ -241,7 +241,7 @@ define([
 
                         var newCell = null;
                         //Se já tiver n assinaturas em uma linha, adiciona uma nova linha abaixo
-                        console.log(_assinaturasPorLinha);
+                        //console.log(_assinaturasPorLinha);
                         if(tblAssinaturas.Get_Row(row).Get_CellsCount() == _assinaturasPorLinha){
                             newCell = tblAssinaturas.Content[tblAssinaturas.Content.length - 1].Get_Cell(0);
                             tblAssinaturas.RemoveSelection();
@@ -331,6 +331,10 @@ define([
         
             //console.log(loadConfig);
 
+            var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+            if(value === null)
+                Common.localStorage.setItem("de-settings-autocomplete-atalho", 0);
+
             if(_mainController == null){
                 try { _mainController = DE.getController('Main'); } catch(e) {
                     try { _mainController = PE.getController('Main'); } catch(e) {
@@ -415,6 +419,29 @@ define([
             _mainController.api.asc_registerCallback('asc_onGetDocInfoEnd', function(){
                 Common.Gateway.metaChange({type: 'docInfo' ,info:  _infoObj});
             });
+
+            var statusbarView = DE.getController('Statusbar').getView('Statusbar');
+            statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-atalho" type="button" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -920px">&nbsp;</span></button>');
+            statusbarView.$el.find('.status-group:last').prepend('<div class="separator short el-edit"></div>');
+            var btnCompleteAtalho = new Common.UI.Button({
+                el: $('#btn-complete-atalho',statusbarView.el),
+                enableToggle: true,
+                hint: "Autocompletar atalhos",
+                hintAnchor: 'top'
+            });
+
+            var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+            btnCompleteAtalho.toggle(currentValueAutocompleteAtalho===null || parseInt(currentValueAutocompleteAtalho) == 1, true);
+
+            btnCompleteAtalho.on('click', function() {
+                var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+                console.log(value);
+                value = 1 - value;
+                Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
+                console.log(value);
+                btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
+            });
+
         };
 
         var handleDocumentKeyUp = function(event){
