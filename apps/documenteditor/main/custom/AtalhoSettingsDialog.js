@@ -106,6 +106,7 @@ define([
                 blankError  : me.txtEmpty,
                 style       : 'width: 100%;',
                 maxLength   : 7,
+                value       : '#',
                 validateOnBlur: false
             });
 

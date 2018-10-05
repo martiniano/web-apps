@@ -35,9 +35,7 @@ define([
         var me = this;
 
         var onInternalCommand = function(objData) 
-        {
-            //console.log(objData);
-            
+        {            
             //Force Save
             if(objData != null && objData.command == 'forceSave')
             {
@@ -331,9 +329,11 @@ define([
         
             //console.log(loadConfig);
 
-            var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");
-            if(value === null)
-                Common.localStorage.setItem("de-settings-autocomplete-atalho", 0);
+            var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+            if(currentValueAutocompleteAtalho === null){
+                currentValueAutocompleteAtalho = 0;
+                Common.localStorage.setItem("de-settings-autocomplete-atalho", currentValueAutocompleteAtalho);
+            }
 
             if(_mainController == null){
                 try { _mainController = DE.getController('Main'); } catch(e) {
@@ -420,25 +420,24 @@ define([
                 Common.Gateway.metaChange({type: 'docInfo' ,info:  _infoObj});
             });
 
+            //Botão na Barra de Status
             var statusbarView = DE.getController('Statusbar').getView('Statusbar');
             statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-atalho" type="button" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -920px">&nbsp;</span></button>');
             statusbarView.$el.find('.status-group:last').prepend('<div class="separator short el-edit"></div>');
             var btnCompleteAtalho = new Common.UI.Button({
                 el: $('#btn-complete-atalho',statusbarView.el),
                 enableToggle: true,
-                hint: "Autocompletar atalhos",
+                hint: "Exibir sugestões de atalhos",
                 hintAnchor: 'top'
             });
 
-            var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+            currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
             btnCompleteAtalho.toggle(currentValueAutocompleteAtalho===null || parseInt(currentValueAutocompleteAtalho) == 1, true);
 
             btnCompleteAtalho.on('click', function() {
-                var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");
-                console.log(value);
+                var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");;
                 value = 1 - value;
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
-                console.log(value);
                 btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
             });
 
@@ -454,28 +453,48 @@ define([
             if (_mainController.api){
                 //var key = event.keyCode;
 
+                //console.trace();
+
                 if(_atalhos == null){
                     if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
                         _atalhos = _mainController.editorConfig.atalhos;		
                     }
                 } 
-                
+
                 _renderMenu = true;
+                _itensBuffer = [];
                 if(_atalhoAutoCompleteMenu.isVisible()){
-                    //Top Arrow or Bottom Arrow
-                    if(event.keyCode == Common.UI.Keys.UP || event.keyCode == Common.UI.Keys.DOWN){ 
-                        event.preventDefault();
+
+                    //Bottom Arrow
+                    if(event.keyCode == Common.UI.Keys.DOWN){     
+                        AscCommon.g_inputContext.emulateKeyDownApi(Common.UI.Keys.UP);
                         _atalhoAutoCompleteMenu.cmpEl.focus();
-                         _atalhoAutoCompleteMenu.onAfterKeydownMenu(event);
-                         _renderMenu = false;
-                         return false;
+                        _.delay(function() {
+                            _atalhoAutoCompleteMenu.items[0].cmpEl.find('a:first').focus();
+                        }, 10);
+                        _renderMenu = false;
+                        return false;
                     }
 
+                    //Top Arrow
+                    if(event.keyCode == Common.UI.Keys.UP){     
+                        AscCommon.g_inputContext.emulateKeyDownApi(Common.UI.Keys.DOWN);
+                        _atalhoAutoCompleteMenu.cmpEl.focus();
+                        _.delay(function() {
+                            var lastItem = _atalhoAutoCompleteMenu.items.length - 1;
+                            _atalhoAutoCompleteMenu.items[lastItem].cmpEl.find('a:first').focus();
+                        }, 10);
+                        _renderMenu = false;
+                        return false;
+                    }
+
+                    /*
                     //Esc
                     if(event.keyCode == Common.UI.Keys.ESC){
                         _atalhoAutoCompleteMenu.hide();
                         _renderMenu = false;
                         _itensBuffer = [];
+                        console.log('Limpando buffer', _itensBuffer);
                     }
 
                     //Enter
@@ -484,6 +503,7 @@ define([
                         _renderMenu = false;
                         _itensBuffer = [];
                     }
+                    */
                 }
             }
         };
@@ -520,9 +540,14 @@ define([
                 }
 
                 _.delay(function() {
-                    menu.cmpEl.focus();
+                    //menu.cmpEl.focus();
+                    if(menu.items.length == 1){
+                        menu.items[0].cmpEl.addClass('over');
+                        menu.items[0].cmpEl.find('a:first').focus();
+                    }
                 }, 10);
 
+                /*
                 menu.items.forEach(function(item){
                     var modalParents = item.cmpEl.closest("div[id^='menu-container-asc']");
 
@@ -535,6 +560,7 @@ define([
                         item.cmpEl.data('bs.tooltip').tip().css('z-index', parseInt(modalParents.css('z-index')) + 10);
                     }
                 });
+                */
 
                 documentHolderView.currentMenu = menu;
             }
@@ -551,7 +577,7 @@ define([
             for(var i = 0; i < itens.length ;i++){
                 var menuItemAtalho = new Common.UI.MenuItem({
                     caption: Common.Utils.String.ellipsis(itens[i] + ' - ' + _atalhos[itens[i]], 80, true),
-                    value: itens[i],
+                    value: itens[i]
                 });
 
                 _atalhoAutoCompleteMenu.addItem(menuItemAtalho);
@@ -571,13 +597,20 @@ define([
         
                 var paraRun = Doc.Get_DocumentPositionInfoForCollaborative();
 
+                var currentValueAutocompleteAtalho = parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho"));
+
                 //var oRunText = new CParagraphGetText();
                 //paraRun.Class.Get_Text(oRunText);
         
-                if(paraRun.Class.Content && paraRun.Position >= 1){
+                if(paraRun != null && paraRun.Class.Content && paraRun.Position >= 1){
                     var pos = paraRun.Position - 1;
 
                     if(paraRun.Class.Content[pos].Type == AscCommonWord.ParaSpace.prototype.Get_Type()){
+                        if(currentValueAutocompleteAtalho === 0){
+                            if(_atalhos[_buffer.text] !== undefined){
+                                replaceAtalho(_buffer.text, _atalhos[_buffer.text]);
+                            }
+                        }  
                         _buffer.startPos = null;
                         _buffer.endPos = null;  
                         _buffer.text = '';          
@@ -597,17 +630,16 @@ define([
                                     itens.push(key);
                                 }
                             }
-                            
 
                             if(itens.length > 0){
                                 if(!_.isEqual(itens, _itensBuffer)){
-                                    //console.log('exibindo');
                                     _itensBuffer = itens;
-                                    exibirMenuPopupAtalhos(itens);                                    
+                                    if(currentValueAutocompleteAtalho === 1){
+                                        exibirMenuPopupAtalhos(itens);           
+                                    }                         
                                 }
                             }else{
                                 if(_atalhoAutoCompleteMenu.isVisible()){
-                                    //console.log('ocultando');
                                     _atalhoAutoCompleteMenu.hide();
                                     _itensBuffer = [];
                                 }
