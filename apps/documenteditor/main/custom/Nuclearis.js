@@ -221,7 +221,7 @@ define([
                     for(var i = 0;i < tblAssinaturas.Get_RowsCount();i++){
                         for(var j = 0; j < tblAssinaturas.Get_Row(i).Get_CellsCount();j++){
                             var pCellIJ = tblAssinaturas.Get_Row(i).Get_Cell(j).GetContent(0).GetElement(0);
-                            if(pCellIJ.GetAllDrawingObjects().length == 0){
+                            if(pCellIJ.GetAllDrawingObjects().length == 0 && pCellIJ.GetText().trim() == ""){
                                 foundedCellEmpty = true;
                                 row = i;
                                 cell = j;
