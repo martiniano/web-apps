@@ -46,53 +46,15 @@ define([
             if(objData != null && objData.command == 'inserirAssinatura')
             {
                 //_mainController.api.asc_addSignatureLine('Anderson', 'fdafds','fdaffdaf dafda da','anderson martniano',30, 20, '');
-                if(objData.data != null)
-                {
-                    //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
-                    if(objData.data.imagem !== null && objData.data.imagem !== '')
-                    {
-                        urltoFile(objData.data.imagem, 'assinatura.png').then(function(file)
-                        {
-                            var Api             = window.g_asc_plugins.api;
-                            var documentId      = Api.DocInfo.get_Id();
-                            var documentUserId  = Api.DocInfo.get_UserId();
-                            var jwt             = Api.CoAuthoringApi.get_jwt();
-
-                            AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
-                            {
-                                if (Asc.c_oAscError.ID.No !== error)
-                                {
-                                    Api.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-                                }
-                                else
-                                {
-                                    objData.data.imagem = urls[0];
-
-                                    if(Api.ImageLoader)
-                                    {
-                                        var oApi = Api;
-                                        Api.ImageLoader.LoadImagesWithCallback(urls, function()
-                                        {
-                                            var aImages = [];
-                                            for(var i = 0; i < urls.length; ++i){
-                                                var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
-                                                if(_image){
-                                                    aImages.push(_image);
-                                                }
-                                            }
-
-                                            inserirAssinatura(objData.data);
-                                        }, []);
-                                    }
-                                }
-                            });
-                        });
-                    }
-                    else
-                    {
-                        inserirAssinatura(objData.data);
-                    }
+                var signaturesBlock = objData.data;
+                if(signaturesBlock.redoSignatures){
+                    redoSignatures();
                 }
+
+                signaturesBlock.signatures.forEach(function(signerBlock){
+                    processaDadosAssinatura(signerBlock);
+                });
+                
             }
 
             
@@ -103,12 +65,69 @@ define([
             }
         };
 
+        var processaDadosAssinatura = function(signerBlock){
+            if(signerBlock != null)
+            {
+                //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
+                if(signerBlock.image !== null && signerBlock.image !== '')
+                {
+                    urltoFile(signerBlock.image, 'assinatura.png').then(function(file)
+                    {
+                        var Api             = window.g_asc_plugins.api;
+                        var documentId      = Api.DocInfo.get_Id();
+                        var documentUserId  = Api.DocInfo.get_UserId();
+                        var jwt             = Api.CoAuthoringApi.get_jwt();
+
+                        AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
+                        {
+                            if (Asc.c_oAscError.ID.No !== error)
+                            {
+                                Api.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+                            }
+                            else
+                            {
+                                signerBlock.image = urls[0];
+
+                                if(Api.ImageLoader)
+                                {
+                                    var oApi = Api;
+                                    Api.ImageLoader.LoadImagesWithCallback(urls, function()
+                                    {
+                                        var aImages = [];
+                                        for(var i = 0; i < urls.length; ++i){
+                                            var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
+                                            if(_image){
+                                                aImages.push(_image);
+                                            }
+                                        }
+
+                                        inserirAssinatura(signerBlock);
+                                    }, []);
+                                }
+                            }
+                        });
+                    });
+                }
+                else
+                {
+                    inserirAssinatura(signerBlock);
+                }
+            }
+        }
+
         //return a promise that resolves with a File instance
         var urltoFile = function(url, filename, mimeType){
             mimeType = mimeType || (url.match(/^data:([^;]+);/)||'')[1];
             return (fetch(url)
-                .then(function(res){return res.arrayBuffer();})
-                .then(function(buf){return new File([buf], filename, {type:mimeType});})
+                .then(function(res){
+                    return res.arrayBuffer();
+                })
+                .then(function(buf){
+                    return new File([buf], filename, {type:mimeType});
+                })
+                .catch(err => {
+                    console.log(err);
+                })
             );
         }
 
@@ -118,8 +137,8 @@ define([
             var imageWidth = data.width != null ? data.width : 300;
             var imageHeight = data.height != null ? data.height : 200;
             
-            if(data.imagem !== null && data.imagem !== ''){
-                var oAssinatura = Api.CreateImage(data.imagem, imageWidth, imageHeight);
+            if(data.image !== null && data.image !== ''){
+                var oAssinatura = Api.CreateImage(data.image, imageWidth, imageHeight);
                 oAssinatura.SetWrappingStyle('topAndBottom');
                 oAssinatura.SetHorAlign("column", "center");
                 oParagraph.AddDrawing(oAssinatura);
@@ -138,6 +157,39 @@ define([
             oParagraph.SetJc('center');
     
             return oParagraph;
+        }
+
+        var redoSignatures = function(){
+            var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
+            var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
+            var Api = window.g_asc_plugins.api;
+
+            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
+                _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
+            }else{
+                _assinaturasPorLinha = 2;
+            }
+
+            var assinaturaContentControl = null;
+            contentControls.forEach(function(control){
+                if(control.Tag == 'ASSINATURAS'){   
+                    assinaturaContentControl = logicDocument.GetContentControl(control.InternalId);
+                    //logicDocument.ClearContentControl(control.InternalId);
+                    var oTable = new CTable(logicDocument.GetDrawingDocument(), logicDocument, true, 1, 1, [], false);
+                    oTable.CorrectBadGrid();
+                    oTable.Set_TableW(tblwidth_Pct, 100);
+                    oTable.Set_TableStyle2(undefined);
+                    assinaturaContentControl.Content.Add_ToContent(0, oTable);
+                    assinaturaContentControl.Content.Remove_FromContent(1, assinaturaContentControl.Content.GetElementsCount() - 1);
+                    Api.asc_Recalculate();
+                }
+            });
+
+           // if(assinaturaContentControl != null){
+            //    var firstElement = assinaturaContentControl.Content.GetElement(0);
+            //   console.log(firstElement, firstElement.GetType());
+                
+            //}
         }
 
         var inserirAssinatura = function(data){
