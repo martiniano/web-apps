@@ -33,6 +33,7 @@ define([
         };
 
         var me = this;
+        var _signaturesBlock = null;
 
         var onInternalCommand = function(objData) 
         {            
@@ -45,19 +46,30 @@ define([
             //Inserir Assinatura
             if(objData != null && objData.command == 'inserirAssinatura')
             {
-                //_mainController.api.asc_addSignatureLine('Anderson', 'fdafds','fdaffdaf dafda da','anderson martniano',30, 20, '');
-                var signaturesBlock = objData.data;
-                if(signaturesBlock.redoSignatures){
-                    redoSignatures();
+                _signaturesBlock = objData.data;
+                
+                if(!_signaturesBlock.signatures){
+                    //Não tem campo signatures, está no padrão antigo, ajustar
+                    _signaturesBlock = {
+                        redoSignatures: false,
+                        signatures: [
+                            {   
+                                width: objData.data.width,
+                                height: objData.data.height,
+                                image: objData.data.imagem,
+                                extras: objData.data.extras
+                            }
+                        ]
+                    }
                 }
 
-                signaturesBlock.signatures.forEach(function(signerBlock){
-                    processaDadosAssinatura(signerBlock);
-                });
-                
+                if(_signaturesBlock.redoSignatures){
+                    _mainController.api.nuclearis_redoSignatures();
+                }
+
+                processNextSignature();
             }
 
-            
             //getDocInfo
             if(objData != null && objData.command == 'getDocInfo')
             {
@@ -65,11 +77,30 @@ define([
             }
         };
 
+        var processNextSignature = function(){
+            if(_signaturesBlock.signatures.length > 0){
+                var signature = _signaturesBlock.signatures.shift();
+                processaDadosAssinatura(signature);
+            }else{
+                var config = {
+                    closable: false,
+                    title: "Sucesso",
+                    msg: "Área de assinaturas atualizada com sucesso!",
+                    iconCls: 'info',
+                    buttons: ['ok']
+                };
+                
+                Common.UI.alert(config);
+
+                _mainController.api.asc_Recalculate();
+            }
+        }
+
         var processaDadosAssinatura = function(signerBlock){
             if(signerBlock != null)
             {
                 //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
-                if(signerBlock.image !== null && signerBlock.image !== '')
+                if(signerBlock.image && signerBlock.image !== null && signerBlock.image !== '')
                 {
                     urltoFile(signerBlock.image, 'assinatura.png').then(function(file)
                     {
@@ -125,7 +156,7 @@ define([
                 .then(function(buf){
                     return new File([buf], filename, {type:mimeType});
                 })
-                .catch(err => {
+                .catch(function(err){
                     console.log(err);
                 })
             );
@@ -133,11 +164,12 @@ define([
 
         var inserirBlockAssinatura = function(Api, oParagraph, data)
         {
+            //console.log(data);
             var extras = data.extras != null ? data.extras : [];
             var imageWidth = data.width != null ? data.width : 300;
             var imageHeight = data.height != null ? data.height : 200;
             
-            if(data.image !== null && data.image !== ''){
+            if(data.image && data.image !== null && data.image !== ''){
                 var oAssinatura = Api.CreateImage(data.image, imageWidth, imageHeight);
                 oAssinatura.SetWrappingStyle('topAndBottom');
                 oAssinatura.SetHorAlign("column", "center");
@@ -159,43 +191,12 @@ define([
             return oParagraph;
         }
 
-        var redoSignatures = function(){
-            var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
-            var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
-            var Api = window.g_asc_plugins.api;
-
-            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
-                _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
-            }else{
-                _assinaturasPorLinha = 2;
-            }
-
-            var assinaturaContentControl = null;
-            contentControls.forEach(function(control){
-                if(control.Tag == 'ASSINATURAS'){   
-                    assinaturaContentControl = logicDocument.GetContentControl(control.InternalId);
-                    //logicDocument.ClearContentControl(control.InternalId);
-                    var oTable = new CTable(logicDocument.GetDrawingDocument(), logicDocument, true, 1, 1, [], false);
-                    oTable.CorrectBadGrid();
-                    oTable.Set_TableW(tblwidth_Pct, 100);
-                    oTable.Set_TableStyle2(undefined);
-                    assinaturaContentControl.Content.Add_ToContent(0, oTable);
-                    assinaturaContentControl.Content.Remove_FromContent(1, assinaturaContentControl.Content.GetElementsCount() - 1);
-                    Api.asc_Recalculate();
-                }
-            });
-
-           // if(assinaturaContentControl != null){
-            //    var firstElement = assinaturaContentControl.Content.GetElement(0);
-            //   console.log(firstElement, firstElement.GetType());
-                
-            //}
-        }
-
         var inserirAssinatura = function(data){
             var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
             var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
             var Api = window.g_asc_plugins.api;
+
+            logicDocument.Create_NewHistoryPoint(AscDFH.historydescription_Document_InsertDocumentsByUrls);
 
             if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
                 _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
@@ -230,17 +231,33 @@ define([
 
                 //assinaturaContentControl.Content.ClearContent();
 
-                var scriptAssinatura = createScriptBlockToReplace("ASSINATURAS", "ASSINATURAS", true, _obj.InternalId);
+                //var scriptAssinatura = createScriptBlockToReplace("ASSINATURAS2", "ASSINATURAS2", true, _obj.InternalId);
 
-                Api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
+                //Api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
                 
+                _mainController.api.nuclearis_redoSignatures();
+
                 assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
             }       
 
             //var oDocument = Api.GetDocument();
             //oDocument.InsertWatermark('RASCUNHO', true);
 
-            var firstElement = assinaturaContentControl.Content.GetElement(0);
+            var tableElement = assinaturaContentControl.Content.GetElement(0);
+            var tableElementPos = null;
+            for(var c = 0; c < assinaturaContentControl.Content.GetElementsCount(); c++){
+                var element = assinaturaContentControl.Content.GetElement(c);
+                if(element.GetType() == AscCommonWord.type_Table){
+                    tableElement = element;
+                    tableElementPos = c;
+                    break;
+                }
+            }
+
+            if(tableElementPos != null){
+                assinaturaContentControl.Content.ClearContent();
+                assinaturaContentControl.Content.AddContent([tableElement]);
+            }
 
             //Se o primeiro elemento do content control de assinatura for um paragrafo troca para uma tabela
             /*
@@ -255,8 +272,11 @@ define([
             }
             */
 
-            if(firstElement != null && firstElement.GetType() == AscCommonWord.type_Table){
-                var tblAssinaturas = firstElement;
+            if(tableElement != null && tableElement.GetType() == AscCommonWord.type_Table){
+                
+                //assinaturaContentControl.Content.Remove_FromContent(1, assinaturaContentControl.Content.GetElementsCount() - 1);
+
+                var tblAssinaturas = tableElement;
                 //Verificar se não nenhuma assinatura até o momento
                 var pCell00 = tblAssinaturas.Get_Row(0).Get_Cell(0).GetContent(0).GetElement(0);
                 if(pCell00.GetText().trim() == 'ASSINATURAS'){
@@ -316,26 +336,17 @@ define([
                     var pLastCellEmptyApi = Api.private_CreateApiParagraph(pLastCellEmpty)
                     //pNewCellApi.RemoveAllElements();
                     inserirBlockAssinatura(Api, pLastCellEmptyApi, data);
+
+                    tblAssinaturas.RecalculateAllTables();
                 }
-            }
+            } 
 
-            Api.asc_Recalculate();
-
-            var config = {
-                closable: false,
-                title: "Sucesso",
-                msg: "Documento assinado com sucesso!",
-                iconCls: 'info',
-                buttons: ['ok']
-            };
-            
-            Common.UI.alert(config);
-            
-            //_contentControl.Content.MoveCursorToEndPos(true, false);                   
+            logicDocument.Recalculate();
+        
             
             //_mainController.api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
 
-
+            processNextSignature();
         }
 
         var createScriptBlockToReplace =  function(Tag, Label, isTextField, InternalId)
@@ -678,7 +689,7 @@ define([
                         if(_buffer.text.length > 1){
                             var itens = [];
                             for (var key in _atalhos) {
-                                if (key.indexOf(_buffer.text) != -1) {
+                                if (key.startsWith(_buffer.text)) {
                                     itens.push(key);
                                 }
                             }

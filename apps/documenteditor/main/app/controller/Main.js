@@ -755,7 +755,7 @@ define([
 
                     this.loadMask.setTitle(title);
 
-                    if (!this.isShowOpenDialog)
+                    if (!this.isShowOpenDialog && !this.appOptions.customization.autosave)
                         this.loadMask.show();
                 }
                 else {
