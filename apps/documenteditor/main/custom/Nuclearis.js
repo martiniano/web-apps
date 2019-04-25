@@ -34,6 +34,7 @@ define([
 
         var me = this;
         var _signaturesBlock = null;
+        var recognition = null;
 
         var onInternalCommand = function(objData) 
         {            
@@ -391,7 +392,6 @@ define([
         var onInit = function(loadConfig) {
         
             //console.log(loadConfig);
-
             var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
             if(currentValueAutocompleteAtalho === null){
                 currentValueAutocompleteAtalho = 0;
@@ -494,7 +494,7 @@ define([
                 hintAnchor: 'top'
             });
 
-            currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
+            var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
             btnCompleteAtalho.toggle(currentValueAutocompleteAtalho===null || parseInt(currentValueAutocompleteAtalho) == 1, true);
 
             btnCompleteAtalho.on('click', function() {
@@ -503,7 +503,6 @@ define([
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
                 btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
             });
-
         };
 
         var handleDocumentKeyUp = function(event){

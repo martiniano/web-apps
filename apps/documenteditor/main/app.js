@@ -197,6 +197,7 @@ require([
         ,'common/main/lib/controller/ExternalMergeEditor'
         ,'common/main/lib/controller/ReviewChanges'
         ,'documenteditor/main/custom/Nuclearis'
+        ,'documenteditor/main/custom/VoiceRecognition'
     ], function() {
         window.compareVersions = true;
         app.start();
