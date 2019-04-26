@@ -707,6 +707,7 @@
         iframe.setAttribute("allowfullscreen",""); // for IE11
         iframe.setAttribute("onmousewheel",""); // for Safari on Mac
         iframe.setAttribute("scrolling","no"); // for Firefox
+        iframe.setAttribute("allow","microphone; camera"); // Allow acess to microphone and camera; Work only in Google Chrome after v64 https://www.chromestatus.com/feature/5023919287304192
         return iframe;
     }
 

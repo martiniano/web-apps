@@ -25,6 +25,7 @@ define([
         var _paraRunInitialPosition = 0;
         var _paraRunFinalPosition = 0;
         var _keyReplaces = [];
+        var _timeOut;
         var _keyReplacesDefault = [
           // Parágrafo
           { key: /parágrafo/ig, value: '{$}paragraph{$}'},
@@ -111,7 +112,7 @@ define([
 
         var configureVoiceRecognition = function(){
             var statusbarView = DE.getController('Statusbar').getView('Statusbar');
-            statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-voice-recognition" type="button" style="margin-right: -4px;" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
+            statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-voice-recognition" type="button" style="margin-right: 0px;" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             statusbarView.$el.find('.status-group:last').prepend('<div class="separator short el-edit"></div>');
             
             var btnVoiceRecognition = new Common.UI.Button({
@@ -126,17 +127,31 @@ define([
             statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-size', "14px 14px");
 
             btnVoiceRecognition.on('click', function() {
-                btnVoiceRecognition.toggle(undefined, true);
-                toggle();
+              toggle();
+              btnVoiceRecognition.toggle(false, true);
             });
         };
 
         var toggle = function() {
-            initSpeechRecognition()
-            if (_started)
-              stopListen();
-            else
-              startListen();
+          if(!(Common.Utils.isChrome && Common.Utils.chromeVersion >= 64)){
+            var config = {
+              closable: false,
+              title: "Recurso indisponível",
+              msg: "Este recurso requer o navegador Google Chrome na versão 64 ou superior",
+              iconCls: 'alert',
+              buttons: ['ok']
+            };
+          
+            Common.UI.alert(config);
+            //btnVoiceRecognition.toggle(false, true);
+            return;
+          }
+
+          initSpeechRecognition()
+          if (_started)
+            stopListen();
+          else
+            startListen();
         };
         
         var startListen = function() {
@@ -148,6 +163,7 @@ define([
         var stopListen = function() {
             _recognition.stop();
             _started = false;
+            clearTimeout(_timeOut);
         };
 
         var initSpeechRecognition = function(){
@@ -177,13 +193,16 @@ define([
                     writeTranscriptedText(event);
                 };
 
+                _recognition.onerror = function(event){
+                  console.error("onerror", event);
+								}
+
                 _keyReplaces = Object.assign([], _keyReplacesDefault);
             }
         }
 
         var restartVoiceRecognition = function (reason) {
-          var _this = this;
-          console.log('restartVoiceRecognition');
+          //console.log('restartVoiceRecognition');
           // play nicely with the browser, and never restart annyang automatically more than once per second
           var timeSinceLastStart = new Date().getTime() - _lastStartedAt;
           _autorestartCount += 1;
@@ -195,7 +214,7 @@ define([
           }
         
           if (timeSinceLastStart < 1000) {
-            setTimeout(function () {
+            _timeOut = setTimeout(function () {
               startListen();
             }, 1000 - timeSinceLastStart);
           } else {
@@ -256,7 +275,7 @@ define([
 
                 textoTemp += event.results[i][0].transcript;
                 textoTemp = replaceAll(textoTemp, '\n', 'nova linha');
-                console.log(textoTemp);
+                //console.log(textoTemp);
                 paraRun.Class.Remove_FromContent(_paraRunInitialPosition, _paraRunFinalPosition, true);
                 paraRun.Class.AddText(textoTemp, _paraRunInitialPosition);
                 paraRun.Class.MoveCursorToEndPos(false);
@@ -349,7 +368,6 @@ define([
               'alt+s': _.bind(function (e) {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('alt+s');
                   toggle();
               }, this)
           }
