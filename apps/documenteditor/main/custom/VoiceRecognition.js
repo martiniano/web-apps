@@ -26,6 +26,7 @@ define([
         var _paraRunFinalPosition = 0;
         var _keyReplaces = [];
         var _timeOut;
+        var _errorAlert = false;
         var _keyReplacesDefault = [
           // Parágrafo
           { key: /parágrafo/ig, value: '{$}paragraph{$}'},
@@ -58,6 +59,10 @@ define([
           { key: /pontos/ig, value: '.'},
           { key: / ponto/ig, value: '.'},
           { key: /ponto/ig, value: '.'},
+          { key: / punto/ig, value: '.'},
+          { key: /punto/ig, value: '.'},
+          { key: / Ponto/ig, value: '.'},
+          { key: /Ponto/ig, value: '.'},
       
           // Virgula
           { key: / virgula/ig, value: ','},
@@ -107,24 +112,25 @@ define([
                 }
             }
 
-            configureVoiceRecognition();
+            if(loadConfig.config.mode == "edit"){
+              configureVoiceRecognitionButton();
+            }
         };
 
-        var configureVoiceRecognition = function(){
-            var statusbarView = DE.getController('Statusbar').getView('Statusbar');
-            statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-voice-recognition" type="button" style="margin-right: 0px;" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
-            statusbarView.$el.find('.status-group:last').prepend('<div class="separator short el-edit"></div>');
+        var configureVoiceRecognitionButton = function(){
+            var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
+            leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-complete-voice-recognition" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
+            //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
             
             var btnVoiceRecognition = new Common.UI.Button({
-                el: $('#btn-complete-voice-recognition',statusbarView.el),
+                el: $('#left-btn-complete-voice-recognition',leftMenuView.el),
                 enableToggle: true,
-                hint: "Habilita ou Desabilita o reconhecimento de voz (alt+s)",
-                hintAnchor: 'top'
+                hint: "Habilita ou Desabilita o reconhecimento de voz (alt+s)"
             });
 
-            statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec.png'");
-            statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-position', "center center");
-            statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-size', "14px 14px");
+            leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec.png'");
+            leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-position', "center center");
+            leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-size', "14px 14px");
 
             btnVoiceRecognition.on('click', function() {
               toggle();
@@ -195,6 +201,20 @@ define([
 
                 _recognition.onerror = function(event){
                   console.error("onerror", event);
+
+                  if(!_errorAlert){
+                    var config = {
+                      closable: false,
+                      title: "Erro ativar reconhecimento de voz.",
+                      msg: event.error+" - O reconhecimento de voz necessita de acesso seguro (https) - consulte o adminstrador do sistema.",
+                      iconCls: 'alert',
+                      buttons: ['ok']
+                    };
+                  
+                    _errorAlert = Common.UI.alert(config);
+                    _errorAlert = true;
+                    stopListen();
+                  }
 								}
 
                 _keyReplaces = Object.assign([], _keyReplacesDefault);
@@ -223,22 +243,22 @@ define([
         }
 
         var updateIcon = function(status) {
-          var statusbarView = DE.getController('Statusbar').getView('Statusbar');
+          var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
           switch(status.toUpperCase()) {
             case "ATIVADO":
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec-enable.gif')");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-position', "center center");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-size', "14px 14px");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec-enable.gif')");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-position', "center center");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-size', "14px 14px");
               break;
             case "DESATIVADO":
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec.png')");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-position', "center center");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-size', "14px 14px");  
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec.png')");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-position', "center center");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-size', "14px 14px");  
                break;
             case "OUVINDO":
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec-speak.gif')");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-position', "center center");
-              statusbarView.$el.find('#btn-complete-voice-recognition span').css('background-size', "14px 14px");  
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-image', "url('./resources/img/rec-speak.gif')");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-position', "center center");
+              leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-size', "14px 14px");  
               break;
           }
         };

@@ -34,7 +34,11 @@ define([
 
         var me = this;
         var _signaturesBlock = null;
-        var recognition = null;
+
+        var _state = {
+            isFromNuclearisDownloadAsDocx : false,
+            isFromNuclearisDownloadAsPdf : false,
+        };
 
         var onInternalCommand = function(objData) 
         {            
@@ -83,17 +87,19 @@ define([
                 var signature = _signaturesBlock.signatures.shift();
                 processaDadosAssinatura(signature);
             }else{
-                var config = {
-                    closable: false,
-                    title: "Sucesso",
-                    msg: "Área de assinaturas atualizada com sucesso!",
-                    iconCls: 'info',
-                    buttons: ['ok']
-                };
+                // var config = {
+                //     closable: false,
+                //     title: "Sucesso",
+                //     msg: "Área de assinaturas atualizada com sucesso!",
+                //     iconCls: 'info',
+                //     buttons: ['ok']
+                // };
                 
-                Common.UI.alert(config);
+                // Common.UI.alert(config);
 
                 _mainController.api.asc_Recalculate();
+
+                _mainController.getApplication().getController('Statusbar').setStatusCaption("Área de assinaturas atualizada com sucesso!");
             }
         }
 
@@ -195,7 +201,7 @@ define([
         var inserirAssinatura = function(data){
             var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
             var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
-            var Api = window.g_asc_plugins.api;
+            var pluginsApi = window.g_asc_plugins.api;
 
             logicDocument.Create_NewHistoryPoint(AscDFH.historydescription_Document_InsertDocumentsByUrls);
 
@@ -220,7 +226,7 @@ define([
                 _content_control_pr.Tag = "ASSINATURAS";
                 _content_control_pr.Lock = 3;
 
-                var _obj = Api.asc_AddContentControl(type, _content_control_pr);
+                var _obj = pluginsApi.asc_AddContentControl(type, _content_control_pr);
                 if (!_obj)
                     return undefined;
 
@@ -241,8 +247,9 @@ define([
                 assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
             }       
 
-            //var oDocument = Api.GetDocument();
-            //oDocument.InsertWatermark('RASCUNHO', true);
+            //var oDocument = _mainController.api.GetDocument();
+            //oDocument.InsertWatermark("RASCUNHO", true);
+            //oDocument.RemoveWatermark("RASCUNHO");
 
             var tableElement = assinaturaContentControl.Content.GetElement(0);
             var tableElementPos = null;
@@ -281,9 +288,9 @@ define([
                 //Verificar se não nenhuma assinatura até o momento
                 var pCell00 = tblAssinaturas.Get_Row(0).Get_Cell(0).GetContent(0).GetElement(0);
                 if(pCell00.GetText().trim() == 'ASSINATURAS'){
-                    var pCell00Api = Api.private_CreateApiParagraph(pCell00)
+                    var pCell00Api = pluginsApi.private_CreateApiParagraph(pCell00)
                     pCell00Api.RemoveAllElements();
-                    inserirBlockAssinatura(Api, pCell00Api, data);
+                    inserirBlockAssinatura(pluginsApi, pCell00Api, data);
                 }else{
                     //Já existe assinatura - adicionar nova coluna (célula) no final
                     var row = tblAssinaturas.Get_RowsCount() - 1;
@@ -334,9 +341,9 @@ define([
                     var lastCellEmpty = tblAssinaturas.Get_Row(row).Get_Cell(cell);
 
                     var pLastCellEmpty = lastCellEmpty.GetContent(0).GetElement(0);
-                    var pLastCellEmptyApi = Api.private_CreateApiParagraph(pLastCellEmpty)
+                    var pLastCellEmptyApi = pluginsApi.private_CreateApiParagraph(pLastCellEmpty)
                     //pNewCellApi.RemoveAllElements();
-                    inserirBlockAssinatura(Api, pLastCellEmptyApi, data);
+                    inserirBlockAssinatura(pluginsApi, pLastCellEmptyApi, data);
 
                     tblAssinaturas.RecalculateAllTables();
                 }
@@ -502,6 +509,161 @@ define([
                 value = 1 - value;
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
                 btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
+            });
+            
+            if(loadConfig.config.mode == "edit"){
+                configureDownloadDocumentAsDocxButton();
+                configureDownloadDocumentAsPdfButton();
+                _mainController.api.nuclearis_registerCallbacks();
+            }
+        };
+
+                
+
+        var configureDownloadDocumentAsDocxButton = function(){
+            var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
+            leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-docx" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
+            //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
+            
+            var btnDownloadDocument = new Common.UI.Button({
+                el: $('#left-btn-download-document-docx',leftMenuView.el),
+                enableToggle: true,
+                hint: "Realiza o download do documento em formato docx (compativel com o Microsoft Word)"
+            });
+
+            leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-image', "url('./resources/img/ms-word.png'");
+            leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-position', "center center");
+            leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-size', "14px 14px");
+
+
+            _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
+                if (_state.isFromNuclearisDownloadAsDocx) {
+                    var documentTitle = _mainController.api.documentTitle.toUpperCase();
+                    var dataAtendimento = "";
+                    if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
+                        dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
+                        documentTitle = dataAtendimento + "_" + documentTitle;
+                    }
+
+                    if(_mainController.editorConfig.patientName){
+                        var patientName = _mainController.editorConfig.patientName;
+                        documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
+                    }
+
+                    //_mainController.api.watermarkDraw = null;
+                    //var oDocument = _mainController.api.GetDocument();
+                    //oDocument.RemoveWatermark("RASCUNHO");
+
+                    //_mainController.api.nuclearis_removeWatermark();
+                    
+                    urltoFile(url, documentTitle).then(function(file){
+                        
+                        var reader = new FileReader();
+
+                        reader.addEventListener("load", function () {
+                            const anchor = document.createElement('a');
+                            anchor.setAttribute('href', this.result);
+                            anchor.setAttribute('download', file.name);
+                            anchor.setAttribute('target', '_blank');
+                            anchor.style.display = 'none';
+                            document.body.appendChild(anchor);
+                            anchor.click();
+                            document.body.removeChild(anchor);
+                        }, false);
+                  
+                        reader.readAsDataURL(file);
+                    });
+                }
+                _state.isFromNuclearisDownloadAsDocx = false;
+                btnDownloadDocument.setDisabled(false); 
+            });
+
+            btnDownloadDocument.on('click', function() {
+                if (btnDownloadDocument.isActive())
+                    btnDownloadDocument.toggle(false);
+
+                btnDownloadDocument.setDisabled(true);   
+                
+                /*
+                _mainController.api.watermarkDraw = new AscCommon.CWatermarkOnDraw(_RASCUNHO_WATERMARK_STRING);
+                _mainController.api.watermarkDraw.Generate();
+                _mainController.api.watermarkDraw.StartRenderer();
+                _mainController.api.WordControl.m_oLogicDocument.Recalculate();
+                */
+
+               _mainController.api.nuclearis_addWatermark();
+               _mainController.api.asc_Recalculate(true);
+
+                // var oDocument = _mainController.api.GetDocument();
+                // oDocument.InsertWatermark("RASCUNHO", true);
+
+                _state.isFromNuclearisDownloadAsDocx = true;
+                if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.DOCX, true);
+            });
+        };
+
+        var configureDownloadDocumentAsPdfButton = function(){
+            var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
+            leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-pdf" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
+            //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
+            
+            var btnDownloadDocumentPdf = new Common.UI.Button({
+                el: $('#left-btn-download-document-pdf',leftMenuView.el),
+                enableToggle: true,
+                hint: "Realiza o download do documento em formato pdf (formato não editável)"
+            });
+
+            leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-image', "url('./resources/img/icon-pdf.png'");
+            leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-position', "center center");
+            leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-size', "14px 14px");
+
+            _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
+                if (_state.isFromNuclearisDownloadAsPdf) {
+                    var documentTitle = _mainController.api.documentTitle.toUpperCase();
+                    
+                    var dataAtendimento = "";
+                    if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
+                        dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
+                        documentTitle = dataAtendimento + "_" + documentTitle;
+                    }
+                    
+                    if(_mainController.editorConfig.patientName){
+                        var patientName = _mainController.editorConfig.patientName;
+                        documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle.replaceAll('DOCX', 'PDF');
+                    }
+
+                    _mainController.api.nuclearis_removeWatermark();
+                    
+                    urltoFile(url, documentTitle).then(function(file){
+                        var reader = new FileReader();
+                        reader.addEventListener("load", function () {
+                            const anchor = document.createElement('a');
+                            anchor.setAttribute('href', this.result);
+                            anchor.setAttribute('download', file.name);
+                            anchor.setAttribute('target', '_blank');
+                            anchor.style.display = 'none';
+                            document.body.appendChild(anchor);
+                            anchor.click();
+                            document.body.removeChild(anchor);
+                        }, false);
+                  
+                        reader.readAsDataURL(file);
+                    });
+                }
+                _state.isFromNuclearisDownloadAsPdf = false;
+                btnDownloadDocumentPdf.setDisabled(false); 
+            });
+
+            btnDownloadDocumentPdf.on('click', function() {
+                if (btnDownloadDocumentPdf.isActive())
+                    btnDownloadDocumentPdf.toggle(false);
+
+                btnDownloadDocumentPdf.setDisabled(true); 
+                
+                _mainController.api.nuclearis_addWatermark();
+
+                _state.isFromNuclearisDownloadAsPdf = true;
+                if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.PDF, true);
             });
         };
 
