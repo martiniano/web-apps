@@ -550,11 +550,7 @@ define([
                         documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
                     }
 
-                    //_mainController.api.watermarkDraw = null;
-                    //var oDocument = _mainController.api.GetDocument();
-                    //oDocument.RemoveWatermark("RASCUNHO");
-
-                    //_mainController.api.nuclearis_removeWatermark();
+                    _mainController.api.Redo();
                     
                     urltoFile(url, documentTitle).then(function(file){
                         
@@ -584,18 +580,8 @@ define([
 
                 btnDownloadDocument.setDisabled(true);   
                 
-                /*
-                _mainController.api.watermarkDraw = new AscCommon.CWatermarkOnDraw(_RASCUNHO_WATERMARK_STRING);
-                _mainController.api.watermarkDraw.Generate();
-                _mainController.api.watermarkDraw.StartRenderer();
-                _mainController.api.WordControl.m_oLogicDocument.Recalculate();
-                */
-
-               _mainController.api.nuclearis_addWatermark();
-               _mainController.api.asc_Recalculate(true);
-
-                // var oDocument = _mainController.api.GetDocument();
-                // oDocument.InsertWatermark("RASCUNHO", true);
+                var oDocument = _mainController.api.GetDocument();
+                oDocument.InsertWatermark("RASCUNHO", true);
 
                 _state.isFromNuclearisDownloadAsDocx = true;
                 if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.DOCX, true);
@@ -676,8 +662,6 @@ define([
         var handleDocumentKeyDown = function(event){
             if (_mainController.api){
                 //var key = event.keyCode;
-
-                //console.trace();
 
                 if(_atalhos == null){
                     if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
