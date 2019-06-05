@@ -435,7 +435,7 @@ define([
                     documentHolderView.textMenu.insertItem(-1, menuAddShortcutPara);
                 }else{
                     documentHolderView.textMenu.insertItem(0, menuAddShortcutPara);
-                }          
+                } 
             });
 
             _atalhoAutoCompleteMenu = new Common.UI.Menu({
@@ -514,11 +514,12 @@ define([
             if(loadConfig.config.mode == "edit"){
                 configureDownloadDocumentAsDocxButton();
                 configureDownloadDocumentAsPdfButton();
-                _mainController.api.nuclearis_registerCallbacks();
-            }
-        };
-
                 
+                _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function(){
+                    _mainController.api.nuclearis_registerCallbacks();
+                });
+            }
+        };      
 
         var configureDownloadDocumentAsDocxButton = function(){
             var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
@@ -550,7 +551,8 @@ define([
                         documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
                     }
 
-                    _mainController.api.Redo();
+                    var oDocument = _mainController.api.GetDocument();
+                    oDocument.RemoveWatermark("RASCUNHO");
                     
                     urltoFile(url, documentTitle).then(function(file){
                         
@@ -582,6 +584,7 @@ define([
                 
                 var oDocument = _mainController.api.GetDocument();
                 oDocument.InsertWatermark("RASCUNHO", true);
+                _mainController.api.asc_Recalculate();
 
                 _state.isFromNuclearisDownloadAsDocx = true;
                 if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.DOCX, true);
