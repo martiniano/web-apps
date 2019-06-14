@@ -216,6 +216,46 @@ define([
         },
 
         onClickBackToDocument: function () {
+            //this.api.asc_setDocumentPassword('122');
+            // var v = {
+            //     "id": "fdasfdsafdsafdsa",
+            //     "userid":1,
+            //     "format": "docx",
+            //     "c": "reopen",
+            //     "url": "http://192.168.32.103:8080/OnlyOfficeServlet?type=download&fileName=laudo_zmh9lhtsntmoush46ztq.docx",
+            //     "title": "fdafdsafdsafdsa",
+            //   };
+          
+            // AscCommon.sendCommand(this.api, null, v);
+            // var hist = new Asc.asc_CVersionHistory();
+            // hist.asc_setUrl("http://192.168.32.103:8080/OnlyOfficeServlet?type=download&fileName=laudo_zmh9lhtsntmoush46ztq.docx");
+            // hist.asc_setDocId("fdsafdsafjdkasfjdkasjfdkajfdklsajfdjdfak");
+            // hist.asc_setCurrentChangeId(0);
+            // hist.asc_setIsRequested(false);
+            // hist.asc_setServerVersion("5.1.3");
+            //this.api.asc_showRevision(hist);
+
+            //var VersionHistory = new window["Asc"].asc_CVersionHistory(hist);
+
+            // this.api.asc_CloseFile();
+
+            // var docInfo = {};
+
+            // docInfo = new Asc.asc_CDocInfo();
+            // docInfo.put_Id(data.doc.key);
+            // docInfo.put_Url(data.doc.url);
+            // docInfo.put_Title(data.doc.title);
+            // docInfo.put_Format(data.doc.fileType);
+            // docInfo.put_VKey(data.doc.vkey);
+            // docInfo.put_Options(data.doc.options);
+            // docInfo.put_UserInfo(_user);
+            // docInfo.put_CallbackUrl(this.editorConfig.callbackUrl);
+            // docInfo.put_Token(data.doc.token);
+            // docInfo.put_Permissions(_permissions);
+
+            // this.api.asc_setDocInfo(this.DocInfo);
+            // this.api.asc_LoadDocument();
+
             // reload editor
             Common.Gateway.requestHistoryClose();
         },

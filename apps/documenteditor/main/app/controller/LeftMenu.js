@@ -66,7 +66,9 @@ define([
                 },
                 'LeftMenu': {
                     'comments:show': _.bind(this.commentsShowHide, this, 'show'),
-                    'comments:hide': _.bind(this.commentsShowHide, this, 'hide')
+                    'comments:hide': _.bind(this.commentsShowHide, this, 'hide'),
+                    'history:show': _.bind(this.historyShowHide, this, 'show'),
+                    'history:hide': _.bind(this.historyShowHide, this, 'hide')
                 },
                 /** coauthoring end **/
                 'Common.Views.About': {
@@ -211,28 +213,7 @@ define([
                 else this.onCreateNew(undefined, 'blank');
                 break;
             case 'history':
-                if (!this.leftMenu.panelHistory.isVisible()) {
-                    if (this.api.isDocumentModified()) {
-                        var me = this;
-                        this.api.asc_stopSaving();
-                        Common.UI.warning({
-                            closable: false,
-                            width: 500,
-                            title: this.notcriticalErrorTitle,
-                            msg: this.leavePageText,
-                            buttons: ['ok', 'cancel'],
-                            primary: 'ok',
-                            callback: function(btn) {
-                                if (btn == 'ok') {
-                                    me.api.asc_undoAllChanges();
-                                    me.showHistory();
-                                } else
-                                    me.api.asc_continueSaving();
-                            }
-                        });
-                    } else
-                        this.showHistory();
-                }
+                this.onShowHistory();
                 break;
             case 'rename':
                 var me = this,
@@ -478,6 +459,19 @@ define([
             this.leftMenu.btnChat.setDisabled(disable);
             /** coauthoring end **/
             this.leftMenu.btnPlugins.setDisabled(disable);
+
+            if(this.leftMenu.btnVoiceRecognition){
+                this.leftMenu.btnVoiceRecognition.setDisabled(disable);
+            }
+
+            if(this.leftMenu.btnDownloadDocument){
+                this.leftMenu.btnDownloadDocument.setDisabled(disable);
+            }
+
+            if(this.leftMenu.btnDownloadDocumentPdf){
+                this.leftMenu.btnDownloadDocumentPdf.setDisabled(disable);
+            }
+
             if (disableFileMenu) this.leftMenu.getMenu('file').SetDisabled(disable);
         },
 
@@ -515,6 +509,14 @@ define([
                 $(this.leftMenu.btnComments.el).blur();
         },
         /** coauthoring end **/
+
+        historyShowHide: function(mode){
+            if(mode == 'show'){
+                this.onShowHistory();
+            }else if(mode == 'hide'){
+
+            }
+        },
 
         aboutShowHide: function(value) {
             if (this.api)
@@ -605,6 +607,35 @@ define([
                     }
                     return false;
             /** coauthoring end **/
+            }
+        },
+
+        onShowHistory: function(){
+            this.leftMenu.btnHistory.toggle(true);
+            if (!this.leftMenu.panelHistory.isVisible()) {
+                if (this.api.isDocumentModified()) {
+                    var me = this;
+                    this.api.asc_stopSaving();
+                    Common.UI.warning({
+                        closable: false,
+                        width: 500,
+                        title: this.notcriticalErrorTitle,
+                        msg: this.leavePageText,
+                        buttons: ['ok', 'cancel'],
+                        primary: 'ok',
+                        callback: function(btn) {
+                            if (btn == 'ok') {
+                                me.api.asc_undoAllChanges();
+                                me.showHistory();
+                            } else{
+                                me.leftMenu.btnHistory.toggle(false);
+                                me.api.asc_continueSaving();
+                            }
+                                
+                        }
+                    });
+                } else
+                    this.showHistory();
             }
         },
 

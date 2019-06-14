@@ -122,9 +122,10 @@ define([
             leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-complete-voice-recognition" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
             
-            var btnVoiceRecognition = new Common.UI.Button({
+            leftMenuView.btnVoiceRecognition = new Common.UI.Button({
                 el: $('#left-btn-complete-voice-recognition',leftMenuView.el),
                 enableToggle: true,
+                disabled: true,
                 hint: "Habilita ou Desabilita o reconhecimento de voz (alt+s)"
             });
 
@@ -132,9 +133,9 @@ define([
             leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-position', "center center");
             leftMenuView.$el.find('#left-btn-complete-voice-recognition span').css('background-size', "14px 14px");
 
-            btnVoiceRecognition.on('click', function() {
+            leftMenuView.btnVoiceRecognition.on('click', function() {
               toggle();
-              btnVoiceRecognition.toggle(false, true);
+              leftMenuView.btnVoiceRecognition.toggle(false, true);
             });
         };
 

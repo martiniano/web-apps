@@ -526,9 +526,10 @@ define([
             leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-docx" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
             
-            var btnDownloadDocument = new Common.UI.Button({
+            leftMenuView.btnDownloadDocument = new Common.UI.Button({
                 el: $('#left-btn-download-document-docx',leftMenuView.el),
                 enableToggle: true,
+                disabled: true,
                 hint: "Realiza o download do documento em formato docx (compativel com o Microsoft Word)"
             });
 
@@ -573,14 +574,14 @@ define([
                     });
                 }
                 _state.isFromNuclearisDownloadAsDocx = false;
-                btnDownloadDocument.setDisabled(false); 
+                leftMenuView.btnDownloadDocument.setDisabled(false); 
             });
 
-            btnDownloadDocument.on('click', function() {
-                if (btnDownloadDocument.isActive())
-                    btnDownloadDocument.toggle(false);
+            leftMenuView.btnDownloadDocument.on('click', function() {
+                if (leftMenuView.btnDownloadDocument.isActive())
+                    leftMenuView.btnDownloadDocument.toggle(false);
 
-                btnDownloadDocument.setDisabled(true);   
+                leftMenuView.btnDownloadDocument.setDisabled(true);   
                 
                 var oDocument = _mainController.api.GetDocument();
                 oDocument.InsertWatermark("RASCUNHO", true);
@@ -596,9 +597,10 @@ define([
             leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-pdf" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
             
-            var btnDownloadDocumentPdf = new Common.UI.Button({
+            leftMenuView.btnDownloadDocumentPdf = new Common.UI.Button({
                 el: $('#left-btn-download-document-pdf',leftMenuView.el),
                 enableToggle: true,
+                disabled: true,
                 hint: "Realiza o download do documento em formato pdf (formato não editável)"
             });
 
@@ -640,14 +642,14 @@ define([
                     });
                 }
                 _state.isFromNuclearisDownloadAsPdf = false;
-                btnDownloadDocumentPdf.setDisabled(false); 
+                leftMenuView.btnDownloadDocumentPdf.setDisabled(false); 
             });
 
-            btnDownloadDocumentPdf.on('click', function() {
-                if (btnDownloadDocumentPdf.isActive())
-                    btnDownloadDocumentPdf.toggle(false);
+            leftMenuView.btnDownloadDocumentPdf.on('click', function() {
+                if (leftMenuView.btnDownloadDocumentPdf.isActive())
+                    leftMenuView.btnDownloadDocumentPdf.toggle(false);
 
-                btnDownloadDocumentPdf.setDisabled(true); 
+                leftMenuView.btnDownloadDocumentPdf.setDisabled(true); 
                 
                 _mainController.api.nuclearis_addWatermark();
 

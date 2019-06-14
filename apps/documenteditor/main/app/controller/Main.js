@@ -310,6 +310,15 @@ define([
                 this.permissions = {};
                 this.document = data.doc;
 
+                if(this.document.teste){
+                    if (this.api.isCoAuthoringEnable) {
+                        this.api.asc_coAuthoringDisconnect();
+                    }
+                    this.api.asc_CloseFile();
+                    //this.api.OpenDocument(data.doc.url);
+                    //return;
+                }
+
                 var docInfo = {};
 
                 if (data.doc) {
@@ -412,6 +421,7 @@ define([
                             item.set('canRestore', false);
                         });
                     }
+                    var me = this;
                     Common.UI.alert({
                         closable: false,
                         title: this.notcriticalErrorTitle,
@@ -420,6 +430,8 @@ define([
                         buttons: ['ok'],
                         callback: _.bind(function(btn){
                             this.onEditComplete();
+                            me.api.asc_continueSaving();
+                            this.getApplication().getController('LeftMenu').getView('LeftMenu').btnHistory.toggle(false);
                         }, this)
                     });
                 } else {
@@ -458,7 +470,7 @@ define([
                                     userid : version.user.id,
                                     username : version.user.name,
                                     usercolor: user.get('color'),
-                                    created: version.created,
+                                    created: (new Date(Date.parse(version.created+" UTC"))).toLocaleString(),
                                     docId: version.key,
                                     markedAsVersion: (group!==version.versionGroup),
                                     selected: (opts.data.currentVersion == version.version),
@@ -507,7 +519,7 @@ define([
                                                 userid : change.user.id,
                                                 username : change.user.name,
                                                 usercolor: user.get('color'),
-                                                created: change.created,
+                                                created: (new Date(Date.parse(change.created+" UTC"))).toLocaleString(),
                                                 docId: version.key,
                                                 docIdPrev: docIdPrev,
                                                 selected: false,
@@ -779,7 +791,6 @@ define([
                     return;
 
                 Common.Gateway.documentReady();
-
                 var me = this,
                     value;
 

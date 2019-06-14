@@ -141,6 +141,15 @@ define([
                 toggleGroup: 'leftMenuGroup'
             });
 
+            this.btnHistory = new Common.UI.Button({
+                el: $('#left-btn-history'),
+                hint: this.tipHistory,
+                enableToggle: true,
+                disabled: true,
+                toggleGroup: 'leftMenuGroup'
+            });
+            this.btnHistory.on('click',        _.bind(this.onBtnHistoryClick, this));
+
             this.btnComments.hide();
             this.btnChat.hide();
 
@@ -306,6 +315,18 @@ define([
             this.btnSearch.setDisabled(false);
             this.btnAbout.setDisabled(false);
             this.btnSupport.setDisabled(false);
+            this.btnHistory.setDisabled(false);
+            if(this.btnVoiceRecognition){
+                this.btnVoiceRecognition.setDisabled(false);
+            }
+
+            if(this.btnDownloadDocument){
+                this.btnDownloadDocument.setDisabled(false);
+            }
+
+            if(this.btnDownloadDocumentPdf){
+                this.btnDownloadDocumentPdf.setDisabled(false);
+            }
             /** coauthoring begin **/
             this.btnComments.setDisabled(false);
             this.btnChat.setDisabled(false);
@@ -380,6 +401,10 @@ define([
             this.onWindowResize();
         },
 
+        onBtnHistoryClick: function(btn, e) {
+            this.fireEvent('history:show', this);
+        },
+
         onWindowResize: function() {
             this.developerHint.css('top', Math.max((this.$el.height()-this.devHeight)/2, this.minDevPosition));
         },
@@ -392,6 +417,7 @@ define([
         tipFile     : 'File',
         tipSearch   : 'Search',
         tipPlugins  : 'Plugins',
+        tipHistory  : 'Version History',
         txtDeveloper: 'DEVELOPER MODE',
         txtTrial: 'TRIAL MODE'
     }, DE.Views.LeftMenu || {}));

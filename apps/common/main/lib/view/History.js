@@ -83,7 +83,7 @@ define([
                     'style="display: block; ' + '<% if (!isRevision) { %>' + 'padding-left: 40px;' + '<% } %>' + '<% if (canRestore && selected) { %>' + 'padding-bottom: 6px;' + '<% } %>' +'">',
                         '<div class="user-date"><%= created %></div>',
                         '<% if (markedAsVersion) { %>',
-                        '<div class="user-version">ver.<%=version%></div>',
+                        '<div class="user-version">ver.<%=version%></div> ',
                         '<% } %>',
                         '<% if (isRevision && hasChanges) { %>',
                             '<div class="revision-expand img-commonctrl ' + '<% if (isExpanded) { %>' + 'up' + '<% } %>' + '"></div>',
@@ -138,6 +138,11 @@ define([
 
             this.btnExpand = new Common.UI.Button({
                 el: $('#history-btn-expand'),
+                enableToggle: false
+            });
+
+            this.btnApply = new Common.UI.Button({
+                el: $('#history-btn-apply'),
                 enableToggle: false
             });
 

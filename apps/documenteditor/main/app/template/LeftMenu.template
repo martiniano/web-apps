@@ -9,6 +9,7 @@
         <button id="left-btn-plugins" class="btn btn-category" content-target=""><span class="btn-icon img-toolbarmenu btn-menu-plugin">&nbsp;</span></button>
         <button id="left-btn-support" class="btn btn-category" content-target=""><span class="btn-icon img-toolbarmenu btn-menu-support">&nbsp;</span></button>
         <button id="left-btn-about" class="btn btn-category" content-target=""><span class="btn-icon img-toolbarmenu btn-menu-about">&nbsp;</span></button>
+        <button id="left-btn-history" class="btn btn-category" content-target=""><span class="btn-icon img-toolbarmenu btn-menu-history">&nbsp;</span></button>
     </div>
     <div class="left-panel" style="">
         <!-- /** coauthoring begin **/ -->
