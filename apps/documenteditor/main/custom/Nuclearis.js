@@ -78,9 +78,68 @@ define([
             //getDocInfo
             if(objData != null && objData.command == 'getDocInfo')
             {
-                window.g_asc_plugins.api.startGetDocInfo();
+                _mainController.api.startGetDocInfo();
             }
+
+            if(objData != null && objData.command == 'insertMeasurementHyperlink')
+            {
+                insertMeasurementHyperlink(objData.data);
+            }
+
+            if(objData != null && objData.command == 'removeMeasurementHyperlink')
+            {
+                removeMeasurementHyperlink(objData.data);
+            }
+            
         };
+
+        var insertMeasurementHyperlink = function(hyperlink){
+            var props, text;
+
+            if (hyperlink && _mainController.api){
+
+                props   = new Asc.CHyperlinkProperty(),
+                url     = $.trim(hyperlink.url);
+
+                if (! /(((^https?)|(^measurement)):\/\/)|(^mailto:)/i.test(url) )
+                    url = 'measurement://'  + url;
+
+                url = url.replace(new RegExp("%20",'g')," ");
+                props.put_Value(url);
+                props.put_Text(hyperlink.text);
+                props.put_ToolTip(hyperlink.tooltip);
+                //props.put_InternalHyperlink(me._originalProps.get_InternalHyperlink());
+
+                text = _mainController.api.can_AddHyperlink();
+
+                if (text !== false) {
+                    //props.put_Text(text);
+                    _mainController.api.add_Hyperlink(props);
+                }else{
+                    _mainController.api.change_Hyperlink(props)
+                }
+            }
+        }
+
+        var removeMeasurementHyperlink = function(hyperlink){
+            if (hyperlink && _mainController.api){
+                var url = 'measurement://'  + hyperlink.url;
+                var allParagraphs = _mainController.api.GetDocument().Document.GetAllParagraphs({All: true, OnlyMainDocument: false});
+                for(var i = 0;i < allParagraphs.length; i++){
+                    var paragraph = allParagraphs[i];
+                    for(var j = 0; j < paragraph.Content.length;j++){
+                        var paragraphContentItem = paragraph.Content[j];
+                        if(paragraphContentItem instanceof AscCommonWord.ParaHyperlink){
+                            if(paragraphContentItem.GetValue() == url){
+                                paragraph.RemoveFromContent(j, 1);
+                            }
+                        }
+                    }
+                }
+
+                _mainController.api.asc_Recalculate();
+            }
+        }
 
         var processNextSignature = function(){
             if(_signaturesBlock.signatures.length > 0){
@@ -519,6 +578,16 @@ define([
                     _mainController.api.nuclearis_registerCallbacks();
                 });
             }
+
+            _mainController.api.asc_registerCallback('asc_onHyperlinkClick', function(url){
+                if (url) {
+                    if(url.startsWith("measurement://")){
+                        Common.Gateway.internalMessage('showMeasurement', url.replace("measurement://", ""));
+                    }else{
+                        window.open(url);
+                    }
+                }
+            });
         };      
 
         var configureDownloadDocumentAsDocxButton = function(){
@@ -984,45 +1053,6 @@ define([
             return target.replace(new RegExp(search, 'g'), replacement);
         };
 
-        /*
-        var _refresh = function() {
-            if (!_lsAllowed)
-                Common.Gateway.internalMessage('localstorage', {cmd:'get', keys:_filter});
-        };
-
-        var _save = function() {
-            if (!_lsAllowed)
-                Common.Gateway.internalMessage('localstorage', {cmd:'set', keys:_store});
-        };
-
-        var _setItem = function(name, value, just) {
-            if (_lsAllowed) {
-                try
-                {
-                    localStorage.setItem(name, value);
-                }
-                catch (error){}
-
-            } else {
-                _store[name] = value;
-
-                if (just===true) {
-                    Common.Gateway.internalMessage('localstorage', {
-                        cmd:'set',
-                        keys: {
-                            name: value
-                        }
-                    });
-                }
-            }
-        };
-
-        try {
-            var _lsAllowed = !!window.localStorage;
-        } catch (e) {
-            _lsAllowed = false;
-        }
-            */
         return {
             getAtalhos: _getAtalhos
         };
