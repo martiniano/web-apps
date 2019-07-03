@@ -474,7 +474,7 @@ define([
                                     docId: version.key,
                                     markedAsVersion: (group!==version.versionGroup),
                                     selected: (opts.data.currentVersion == version.version),
-                                    canRestore: this.appOptions.canHistoryRestore && (ver < versions.length-1),
+                                    canRestore: this.appOptions.canHistoryRestore && (ver <= versions.length-1),
                                     isExpanded: true,
                                     serverVersion: version.serverVersion
                                 }));
