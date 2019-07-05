@@ -31,7 +31,9 @@ define([
             SymbolsCount    : 0,
             SymbolsWSCount  : 0
         };
-
+        var EMU_PER_PIXEL = 9525;
+        var EMU_PER_POINT = 12700;
+        var EMU_PER_CENTIMETER = 360000;
         var me = this;
         var _signaturesBlock = null;
 
@@ -90,6 +92,16 @@ define([
             {
                 removeMeasurementHyperlink(objData.data);
             }
+
+            if(objData != null && objData.command == 'replaceContentControls')
+            {
+                _mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
+            }
+
+            if(objData != null && objData.command == 'uploadAndInsertImage')
+            {
+                uploadAndInsertImage(objData.data);
+            }
             
         };
 
@@ -108,12 +120,10 @@ define([
                 props.put_Value(url);
                 props.put_Text(hyperlink.text);
                 props.put_ToolTip(hyperlink.tooltip);
-                //props.put_InternalHyperlink(me._originalProps.get_InternalHyperlink());
 
                 text = _mainController.api.can_AddHyperlink();
 
                 if (text !== false) {
-                    //props.put_Text(text);
                     _mainController.api.add_Hyperlink(props);
                 }else{
                     _mainController.api.change_Hyperlink(props)
@@ -138,6 +148,58 @@ define([
                 }
 
                 _mainController.api.asc_Recalculate();
+            }
+        }
+
+
+        var generateRandomName = function(){
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        var uploadAndInsertImage = function(base64Image){
+            if(!_.isEmpty(base64Image))
+            {
+                urltoFile(base64Image, generateRandomName()+'.png').then(function(file)
+                {
+                    var oApi             = _mainController.api;
+                    var documentId      = oApi.DocInfo.get_Id();
+                    var documentUserId  = oApi.DocInfo.get_UserId();
+                    var jwt             = oApi.CoAuthoringApi.get_jwt();
+
+                    AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
+                    {
+                        if (Asc.c_oAscError.ID.No !== error)
+                        {
+                            oApi.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+                        }
+                        else
+                        {
+                            if(oApi.ImageLoader)
+                            {
+                                oApi.ImageLoader.LoadImagesWithCallback(urls, function()
+                                {
+                                    var oDoc =  _mainController.api.WordControl.m_oLogicDocument;
+                                    oDoc.Create_NewHistoryPoint(AscDFH.historydescription_Document_AddImageToPage);
+                                    var positionRun = oDoc.Get_DocumentPositionInfoForCollaborative();
+                                    if (null != positionRun) {
+                                        
+                                        var oRun = positionRun.Class;
+
+                                        for(var i = 0; i < urls.length; ++i){
+                                            var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
+                                            if(_image){
+                                                var oImage = oApi.CreateImage(urls[i], EMU_PER_PIXEL * _image.Image.width, EMU_PER_PIXEL * _image.Image.height);
+                                                oRun.Add_ToContent(positionRun.Position, oImage.Drawing);
+                                            }
+                                        }
+         
+                                        oApi.asc_Recalculate();
+                                    }
+                                }, []);
+                            }
+                        }
+                    });
+                });
             }
         }
 
@@ -262,7 +324,7 @@ define([
             var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
             var pluginsApi = window.g_asc_plugins.api;
 
-            logicDocument.Create_NewHistoryPoint(AscDFH.historydescription_Document_InsertDocumentsByUrls);
+            logicDocument.Create_NewHistoryPoint(AscDFH.historydescription_Document_InsertSignatureLine);
 
             if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
                 _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
@@ -588,6 +650,8 @@ define([
                     }
                 }
             });
+
+            
         };      
 
         var configureDownloadDocumentAsDocxButton = function(){
@@ -1026,6 +1090,7 @@ define([
         };
 
         var startPluginConstrutorDeLaudo = function(){
+            
             var plugin = window.g_asc_plugins.getPluginByGuid(_guidConstrutorDeLaudo);
             if (!plugin)
                 return;
@@ -1033,16 +1098,6 @@ define([
             if(!isRunned){
                 
                 var pluginData = new window.Asc.CPluginData();
-                
-                /*
-			    if(mainController && mainController.editorConfig && mainController.editorConfig.macros){
-                    pluginData.setAttribute("macros", mainController.editorConfig.macros);
-                }
-                
-                if(mainController && mainController.editorConfig && typeof(mainController.editorConfig.laudoEstruturado) !== 'undefined') {
-                    pluginData.setAttribute("laudoEstruturado", mainController.editorConfig.laudoEstruturado);
-                }
-                */
                 
                 window.g_asc_plugins.run(_guidConstrutorDeLaudo, 0, pluginData, true);
             }	
