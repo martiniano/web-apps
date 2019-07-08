@@ -117,16 +117,34 @@ define([
                     url = 'measurement://'  + url;
 
                 url = url.replace(new RegExp("%20",'g')," ");
-                props.put_Value(url);
-                props.put_Text(hyperlink.text);
-                props.put_ToolTip(hyperlink.tooltip);
+
 
                 text = _mainController.api.can_AddHyperlink();
 
                 if (text !== false) {
+                    props.put_Value(url);
+                    props.put_Text(hyperlink.text);
+                    props.put_ToolTip(hyperlink.tooltip);
+
+                    if(!_.isEmpty($.trim(text))) {
+                        props.put_Text(text);
+                    }
+
                     _mainController.api.add_Hyperlink(props);
                 }else{
-                    _mainController.api.change_Hyperlink(props)
+                    var selectedElements = _mainController.api.getSelectedElements();
+                    if (selectedElements && _.isArray(selectedElements)){
+                        _.each(selectedElements, function(el, i) {
+                            if (selectedElements[i].get_ObjectType() == Asc.c_oAscTypeSelectElement.Hyperlink)
+                                props = selectedElements[i].get_ObjectValue();
+                        });
+                    }
+
+                    if (props) {
+                        props.put_Value(url);
+                        props.put_ToolTip(hyperlink.tooltip);
+                        _mainController.api.change_Hyperlink(props);
+                    }
                 }
             }
         }

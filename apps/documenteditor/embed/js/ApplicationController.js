@@ -264,6 +264,11 @@ var ApplicationController = new(function(){
                     Common.Analytics.trackEvent('Save');
             });
 
+
+        if(!embedConfig.saveUrl && api && permissions.print!==false){
+            ApplicationView.tools.get('#idt-download').html('<span class="mi-icon svg-icon print"></span>Imprimir')
+        }
+
         $('#id-btn-close').on('click', function(){
             if (config.customization && config.customization.goback && config.customization.goback.url)
                 window.parent.location.href = config.customization.goback.url;
