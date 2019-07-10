@@ -1,6 +1,6 @@
 /*
  *
- * (c) Copyright Ascensio System Limited 2010-2018
+ * (c) Copyright Ascensio System SIA 2010-2019
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -13,8 +13,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at Lubanas st. 125a-25, Riga, Latvia,
- * EU, LV-1021.
+ * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
  * of the Program must display Appropriate Legal Notices, as required under
@@ -1319,7 +1319,7 @@ define([
             Common.util.Shortcuts.delegateShortcuts({
                 shortcuts: {
                     'command+l,ctrl+l': function(e) {
-                        if (me.editMode && !me._state.multiselect) {
+                        if (me.editMode && !me._state.multiselect && me.toolbar.mode.canModifyFilter) {
                             var formattableinfo = me.api.asc_getCellInfo().asc_getFormatTableInfo();
                             if (!formattableinfo) {
                                 if (_.isUndefined(me.toolbar.mnuTableTemplatePicker))
@@ -1334,7 +1334,7 @@ define([
                     'command+shift+l,ctrl+shift+l': function(e) {
                         var state = me._state.filter;
                         me._state.filter = undefined;
-                        if (me.editMode && me.api && !me._state.multiselect) {
+                        if (me.editMode && me.api && !me._state.multiselect && me.toolbar.mode.canModifyFilter) {
                             if (me._state.tablename || state)
                                 me.api.asc_changeAutoFilter(me._state.tablename, Asc.c_oAscChangeFilterOptions.filter, !state);
                             else
@@ -2010,6 +2010,11 @@ define([
 
                 need_disable = !!info.asc_getPivotTableInfo();
                 toolbar.lockToolbar(SSE.enumLock.editPivot, need_disable, { array: [toolbar.btnMerge, toolbar.btnInsertHyperlink, toolbar.btnSetAutofilter, toolbar.btnClearAutofilter, toolbar.btnSortDown, toolbar.btnSortUp, toolbar.btnAutofilter]});
+
+                need_disable = !toolbar.mode.canModifyFilter;
+                toolbar.lockToolbar(SSE.enumLock.cantModifyFilter, need_disable, { array: [toolbar.btnSortDown, toolbar.btnSortUp, toolbar.mnuitemSortAZ, toolbar.mnuitemSortZA, toolbar.btnSetAutofilter,
+                    toolbar.mnuitemAutoFilter, toolbar.btnTableTemplate, toolbar.btnClearStyle.menu.items[0], toolbar.btnClearStyle.menu.items[2] ]});
+
             }
 
             val = info.asc_getNumFormatInfo();
@@ -2716,7 +2721,7 @@ define([
         },
 
         applyFormulaSettings: function() {
-            if (this.toolbar.rendered) {
+            if (this.toolbar.btnInsertFormula && this.toolbar.btnInsertFormula.rendered) {
                 var formulas = this.toolbar.btnInsertFormula.menu.items;
                 for (var i=0; i<Math.min(4,formulas.length); i++) {
                     formulas[i].setCaption(this.api.asc_getFormulaLocaleName(formulas[i].value));

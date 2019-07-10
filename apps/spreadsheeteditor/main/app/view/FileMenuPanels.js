@@ -1,6 +1,6 @@
 /*
  *
- * (c) Copyright Ascensio System Limited 2010-2018
+ * (c) Copyright Ascensio System SIA 2010-2019
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -13,8 +13,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at Lubanas st. 125a-25, Riga, Latvia,
- * EU, LV-1021.
+ * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
  * of the Program must display Appropriate Legal Notices, as required under
@@ -602,6 +602,8 @@ define([
                 data        : [
                     { value: 'en', displayValue: this.txtEn, exampleValue: this.txtExampleEn },
                     { value: 'de', displayValue: this.txtDe, exampleValue: this.txtExampleDe },
+                    { value: 'es', displayValue: this.txtEs, exampleValue: this.txtExampleEs },
+                    { value: 'fr', displayValue: this.txtFr, exampleValue: this.txtExampleFr },
                     { value: 'ru', displayValue: this.txtRu, exampleValue: this.txtExampleRu },
                     { value: 'pl', displayValue: this.txtPl, exampleValue: this.txtExamplePl }
                 ]
@@ -619,21 +621,25 @@ define([
                     { value: 0x042C, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x042C)[1] },
                     { value: 0x0405, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0405)[1] },
                     { value: 0x0407, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0407)[1] },
+                    { value: 0x0807, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0807)[1] },
                     { value: 0x0408, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0408)[1] },
                     { value: 0x0C09, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0C09)[1] },
                     { value: 0x0809, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0809)[1] },
                     { value: 0x0409, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0409)[1] },
                     { value: 0x0C0A, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0C0A)[1] },
+                    { value: 0x080A, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x080A)[1] },
                     { value: 0x040B, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x040B)[1] },
                     { value: 0x040C, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x040C)[1] },
                     { value: 0x0410, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0410)[1] },
                     { value: 0x0411, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0411)[1] },
                     { value: 0x0412, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0412)[1] },
                     { value: 0x0426, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0426)[1] },
+                    { value: 0x0413, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0413)[1] },
                     { value: 0x0415, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0415)[1] },
                     { value: 0x0416, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0416)[1] },
                     { value: 0x0816, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0816)[1] },
                     { value: 0x0419, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0419)[1] },
+                    { value: 0x041B, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x041B)[1] },
                     { value: 0x0424, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0424)[1] },
                     { value: 0x041F, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x041F)[1] },
                     { value: 0x0422, displayValue: Common.util.LanguageInfo.getLocalLanguageName(0x0422)[1] },
@@ -783,8 +789,8 @@ define([
                     info.asc_setSymbol(landId);
                     var arr = this.api.asc_getFormatCells(info); // all formats
                     text = this.api.asc_getLocaleExample(arr[4], 1000.01, landId);
-                    text = text + ' ' + this.api.asc_getLocaleExample(arr[5], (new Date()).getExcelDateWithTime(), landId);
-                    text = text + ' ' + this.api.asc_getLocaleExample(arr[6], (new Date()).getExcelDateWithTime(), landId);
+                    text = text + ' ' + this.api.asc_getLocaleExample(arr[5], Asc.cDate().getExcelDateWithTime(), landId);
+                    text = text + ' ' + this.api.asc_getLocaleExample(arr[6], Asc.cDate().getExcelDateWithTime(), landId);
                 }
                 $('#fms-lbl-reg-settings').text(_.isEmpty(text) ? '' : this.strRegSettingsEx + text);
             }
@@ -813,10 +819,14 @@ define([
         txtDe: 'Deutsch',
         txtRu: 'Russian',
         txtPl: 'Polish',
+        txtEs: 'Spanish',
+        txtFr: 'French',
         txtExampleEn: ' SUM; MIN; MAX; COUNT',
         txtExampleDe: ' SUMME; MIN; MAX; ANZAHL',
         txtExampleRu: ' СУММ; МИН; МАКС; СЧЁТ',
         txtExamplePl: ' SUMA; MIN; MAX; ILE.LICZB',
+        txtExampleEs: ' SUMA; MIN; MAX; CALCULAR',
+        txtExampleFr: ' SOMME; MIN; MAX; NB',
         strFuncLocale: 'Formula Language',
         strFuncLocaleEx: 'Example: SUM; MIN; MAX; COUNT',
         strRegSettings: 'Regional Settings',

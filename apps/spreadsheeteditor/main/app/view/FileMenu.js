@@ -1,6 +1,6 @@
 /*
  *
- * (c) Copyright Ascensio System Limited 2010-2018
+ * (c) Copyright Ascensio System SIA 2010-2019
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -13,8 +13,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at Lubanas st. 125a-25, Riga, Latvia,
- * EU, LV-1021.
+ * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
  * of the Program must display Appropriate Legal Notices, as required under
@@ -166,8 +166,7 @@ define([
                 'saveas'    : (new SSE.Views.FileMenuPanels.ViewSaveAs({menu:me})).render(),
                 'opts'      : (new SSE.Views.FileMenuPanels.Settings({menu:me})).render(),
                 'info'      : (new SSE.Views.FileMenuPanels.DocumentInfo({menu:me})).render(),
-                'rights'    : (new SSE.Views.FileMenuPanels.DocumentRights({menu:me})).render(),
-                'help'      : (new SSE.Views.FileMenuPanels.Help({menu:me})).render()
+                'rights'    : (new SSE.Views.FileMenuPanels.DocumentRights({menu:me})).render()
             };
 
             me.$el.find('.content-box').hide();
@@ -211,7 +210,7 @@ define([
                                                                                        this.mode.sharingSettingsUrl&&this.mode.sharingSettingsUrl.length))?'show':'hide']();
 
             this.items[11][(this.mode.isEdit || this.mode.canComments)?'show':'hide']();
-            this.items[11].$el.find('+.devider')[(this.mode.isEdit || this.mode.canComments)?'show':'hide']();
+            this.items[11].$el.prev()[(this.mode.isEdit || this.mode.canComments)?'show':'hide']();
 
             this.mode.canBack ? this.$el.find('#fm-btn-back').show().prev().show() :
                                     this.$el.find('#fm-btn-back').hide().prev().hide();
@@ -233,7 +232,12 @@ define([
                 }
             }
 
-            this.panels['help'].setLangConfig(this.mode.lang);
+            this.items[12][this.mode.canHelp ?'show':'hide']();
+            this.items[12].$el.prev()[this.mode.canHelp ?'show':'hide']();
+            if (this.mode.canHelp) {
+                this.panels['help'] = ((new SSE.Views.FileMenuPanels.Help({menu: this})).render());
+                this.panels['help'].setLangConfig(this.mode.lang);
+            }
         },
 
         setMode: function(mode, delay) {

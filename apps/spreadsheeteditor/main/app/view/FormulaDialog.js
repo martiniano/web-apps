@@ -1,6 +1,6 @@
 /*
  *
- * (c) Copyright Ascensio System Limited 2010-2018
+ * (c) Copyright Ascensio System SIA 2010-2019
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -13,8 +13,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at Lubanas st. 125a-25, Riga, Latvia,
- * EU, LV-1021.
+ * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
  * of the Program must display Appropriate Legal Notices, as required under
@@ -116,7 +116,9 @@ define([
                     en: this[translate],
                     de: this[translate+'_de'],
                     ru: this[translate+'_ru'],
-                    pl: this[translate+'_pl']
+                    pl: this[translate+'_pl'],
+                    es: this[translate+'_es'],
+                    fr: this[translate+'_fr']
                 };
             }
 
@@ -407,7 +409,7 @@ define([
         sCategoryEngineering:           'Engineering',
         sCategoryFinancial:             'Financial',
         sCategoryInformation:           'Information',
-        sCategoryLookupAndReference:    'Lookup and Reference',
+        sCategoryLookupAndReference:    'Lookup and reference',
         sCategoryMathematic:            'Math and trigonometry',
         sCategoryStatistical:           'Statistical',
         sCategoryTextAndData:           'Text and data',
@@ -439,6 +441,30 @@ define([
         sCategoryStatistical_ru:        'Статистические',
         sCategoryTextAndData_ru:        'Текст и данные',
         txtTitle:                       'Insert Function',
+        sCategoryAll_es:                   'Todo',
+        sCategoryLogical_es:               'Lógico',
+        sCategoryCube_es:                  'Cubo',
+        sCategoryDatabase_es:              'Base de Datos',
+        sCategoryDateAndTime_es:           'Fecha y hora',
+        sCategoryEngineering_es:           'Ingenería',
+        sCategoryFinancial_es:             'Financial',
+        sCategoryInformation_es:           'Información',
+        sCategoryLookupAndReference_es:    'Búsqueda y referencia',
+        sCategoryMathematic_es:            'Matemáticas y trigonometría',
+        sCategoryStatistical_es:           'Estadístico',
+        sCategoryTextAndData_es:           'Texto y datos',
+        sCategoryAll_fr:                   'Tout',
+        sCategoryLogical_fr:               'Logique',
+        sCategoryCube_fr:                  'Cube',
+        sCategoryDatabase_fr:              'Base de données',
+        sCategoryDateAndTime_fr:           'Date et heure',
+        sCategoryEngineering_fr:           'Ingénierie',
+        sCategoryFinancial_fr:             'Financier',
+        sCategoryInformation_fr:           'Information',
+        sCategoryLookupAndReference_fr:    'Recherche et référence',
+        sCategoryMathematic_fr:            'Maths et trigonométrie',
+        sCategoryStatistical_fr:           'Statistiques',
+        sCategoryTextAndData_fr:           'Texte et données',
         sCategoryAll_pl:                   'Wszystko',
         sCategoryLogical_pl:               'Logiczny',
         sCategoryCube_pl:                  'Sześcian',
