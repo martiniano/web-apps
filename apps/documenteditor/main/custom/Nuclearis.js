@@ -248,7 +248,7 @@ define([
                 //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
                 if(signerBlock.image && signerBlock.image !== null && signerBlock.image !== '')
                 {
-                    urltoFile(signerBlock.image, 'assinatura.png').then(function(file)
+                    urltoFile(signerBlock.image, generateRandomName()+'.png').then(function(file)
                     {
                         var Api             = window.g_asc_plugins.api;
                         var documentId      = Api.DocInfo.get_Id();
@@ -496,45 +496,6 @@ define([
             processNextSignature();
         }
 
-        var createScriptBlockToReplace =  function(Tag, Label, isTextField, InternalId)
-        {		
-            if(Tag != 'ASSINATURAS'){
-                var _script = "\r\n\
-                    var oDocument = Api.GetDocument();\r\n\
-                    var oParagraph = Api.CreateParagraph();\r\n\
-                    var oRun = oParagraph.AddText(\'" + Label + "\');\r\n\
-                    oRun.SetColor(255,255,255);\r\n\
-                    oRun.SetShd(\"clear\"," + (isTextField ? "0, 0, 255" : "255, 0, 0" ) + ");\r\n\
-                    oDocument.InsertContent([oParagraph], true);\r\n\
-                    ";
-            }else{
-                var _script = "\r\n\
-                    var oDocument = Api.GetDocument();\r\n\
-                    var tblAssinatura = Api.CreateTable(1, 1);\r\n\
-                    tblAssinatura.SetWidth('percent', 100);\r\n\
-                    var pCell00 = tblAssinatura.GetRow(0).GetCell(0).GetContent().GetElement(0);\r\n\
-                    pCell00.SetJc('center');\r\n\
-                    var oRun = pCell00.AddText(\'" + Label + "\');\r\n\
-                    oRun.SetColor(255,255,255);\r\n\
-                    oRun.SetShd(\"clear\"," + (isTextField ? "0, 0, 255" : "255, 0, 0" ) + ");\r\n\
-                    oDocument.InsertContent([tblAssinatura], true);\r\n\
-                    ";
-            }
-            _script = _script.replaceAll("\r\n", "");
-            _script = _script.replaceAll("\n", "");
-            
-            var _scriptObject = {
-                "Props" : {
-                    "Tag"        : Tag,
-                    "Lock"       : 3,
-                    "InternalId" : InternalId
-                },
-                "Script" : _script
-            };
-            
-            return _scriptObject;
-        }
-
         var onInit = function(loadConfig) {
         
             //console.log(loadConfig);
@@ -669,7 +630,9 @@ define([
                 }
             });
 
-            
+            // _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function (){
+            //     this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
+            // });
         };      
 
         var configureDownloadDocumentAsDocxButton = function(){
