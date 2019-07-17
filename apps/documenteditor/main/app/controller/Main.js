@@ -310,15 +310,6 @@ define([
                 this.permissions = {};
                 this.document = data.doc;
 
-                if(this.document.teste){
-                    if (this.api.isCoAuthoringEnable) {
-                        this.api.asc_coAuthoringDisconnect();
-                    }
-                    this.api.asc_CloseFile();
-                    //this.api.OpenDocument(data.doc.url);
-                    //return;
-                }
-
                 var docInfo = {};
 
                 if (data.doc) {
@@ -474,7 +465,7 @@ define([
                                     docId: version.key,
                                     markedAsVersion: (group!==version.versionGroup),
                                     selected: (opts.data.currentVersion == version.version),
-                                    canRestore: this.appOptions.canHistoryRestore && (ver <= versions.length-1),
+                                    canRestore: this.appOptions.canHistoryRestore && (version.version != opts.data.currentVersion),
                                     isExpanded: true,
                                     serverVersion: version.serverVersion
                                 }));
