@@ -23,7 +23,6 @@ define([
         var _renderMenu = true;
         var _atalhos = null;
         var _categoriasDeAtalho = null;
-        var _assinaturasPorLinha = 2;
         var _infoObj = {
             PageCount       : 0,
             WordsCount      : 0,
@@ -31,9 +30,6 @@ define([
             SymbolsCount    : 0,
             SymbolsWSCount  : 0
         };
-        var EMU_PER_PIXEL = 9525;
-        var EMU_PER_POINT = 12700;
-        var EMU_PER_CENTIMETER = 360000;
         var me = this;
         var _signaturesBlock = null;
 
@@ -90,7 +86,7 @@ define([
 
             if(objData != null && objData.command == 'removeMeasurementHyperlink')
             {
-                removeMeasurementHyperlink(objData.data);
+                _mainController.api.nuclearis_removeMeasurementHyperlink(objData.data);
             }
 
             if(objData != null && objData.command == 'replaceContentControls')
@@ -149,27 +145,6 @@ define([
             }
         }
 
-        var removeMeasurementHyperlink = function(hyperlink){
-            if (hyperlink && _mainController.api){
-                var url = 'measurement://'  + hyperlink.url;
-                var allParagraphs = _mainController.api.GetDocument().Document.GetAllParagraphs({All: true, OnlyMainDocument: false});
-                for(var i = 0;i < allParagraphs.length; i++){
-                    var paragraph = allParagraphs[i];
-                    for(var j = 0; j < paragraph.Content.length;j++){
-                        var paragraphContentItem = paragraph.Content[j];
-                        if(paragraphContentItem instanceof AscCommonWord.ParaHyperlink){
-                            if(paragraphContentItem.GetValue() == url){
-                                paragraph.RemoveFromContent(j, 1);
-                            }
-                        }
-                    }
-                }
-
-                _mainController.api.asc_Recalculate();
-            }
-        }
-
-
         var generateRandomName = function(){
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
@@ -179,44 +154,7 @@ define([
             {
                 urltoFile(base64Image, generateRandomName()+'.png').then(function(file)
                 {
-                    var oApi             = _mainController.api;
-                    var documentId      = oApi.DocInfo.get_Id();
-                    var documentUserId  = oApi.DocInfo.get_UserId();
-                    var jwt             = oApi.CoAuthoringApi.get_jwt();
-
-                    AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
-                    {
-                        if (Asc.c_oAscError.ID.No !== error)
-                        {
-                            oApi.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-                        }
-                        else
-                        {
-                            if(oApi.ImageLoader)
-                            {
-                                oApi.ImageLoader.LoadImagesWithCallback(urls, function()
-                                {
-                                    var oDoc =  _mainController.api.WordControl.m_oLogicDocument;
-                                    oDoc.Create_NewHistoryPoint(AscDFH.historydescription_Document_AddImageToPage);
-                                    var positionRun = oDoc.Get_DocumentPositionInfoForCollaborative();
-                                    if (null != positionRun) {
-                                        
-                                        var oRun = positionRun.Class;
-
-                                        for(var i = 0; i < urls.length; ++i){
-                                            var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
-                                            if(_image){
-                                                var oImage = oApi.CreateImage(urls[i], EMU_PER_PIXEL * _image.Image.width, EMU_PER_PIXEL * _image.Image.height);
-                                                oRun.Add_ToContent(positionRun.Position, oImage.Drawing);
-                                            }
-                                        }
-         
-                                        oApi.asc_Recalculate();
-                                    }
-                                }, []);
-                            }
-                        }
-                    });
+                    _mainController.api.nuclearis_uploadAndInsertImage(file);
                 });
             }
         }
@@ -224,7 +162,7 @@ define([
         var processNextSignature = function(){
             if(_signaturesBlock.signatures.length > 0){
                 var signature = _signaturesBlock.signatures.shift();
-                processaDadosAssinatura(signature);
+                processSignatureBlock(signature);
             }else{
                 // var config = {
                 //     closable: false,
@@ -236,13 +174,18 @@ define([
                 
                 // Common.UI.alert(config);
 
-                _mainController.api.asc_Recalculate();
+                _mainController.api.nuclearis_recalculate();
 
                 _mainController.getApplication().getController('Statusbar').setStatusCaption("Área de assinaturas atualizada com sucesso!");
             }
         }
 
-        var processaDadosAssinatura = function(signerBlock){
+        var processSignatureBlock = function(signerBlock){
+            var signaturesPerLine = 2;
+            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.signaturesPerLine){
+                signaturesPerLine = _mainController.editorConfig.signaturesPerLine;		
+            }
+            
             if(signerBlock != null)
             {
                 //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
@@ -250,44 +193,17 @@ define([
                 {
                     urltoFile(signerBlock.image, generateRandomName()+'.png').then(function(file)
                     {
-                        var Api             = window.g_asc_plugins.api;
-                        var documentId      = Api.DocInfo.get_Id();
-                        var documentUserId  = Api.DocInfo.get_UserId();
-                        var jwt             = Api.CoAuthoringApi.get_jwt();
-
-                        AscCommon.UploadImageFiles([file], documentId, documentUserId, jwt, function(error, urls)
-                        {
-                            if (Asc.c_oAscError.ID.No !== error)
-                            {
-                                Api.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-                            }
-                            else
-                            {
-                                signerBlock.image = urls[0];
-
-                                if(Api.ImageLoader)
-                                {
-                                    var oApi = Api;
-                                    Api.ImageLoader.LoadImagesWithCallback(urls, function()
-                                    {
-                                        var aImages = [];
-                                        for(var i = 0; i < urls.length; ++i){
-                                            var _image = oApi.ImageLoader.LoadImage(urls[i], 1);
-                                            if(_image){
-                                                aImages.push(_image);
-                                            }
-                                        }
-
-                                        inserirAssinatura(signerBlock);
-                                    }, []);
-                                }
-                            }
+                        _mainController.api.nuclearis_uploadAndInsertSignatureImage(file, function(image_url){
+                            signerBlock.image = image_url;
+                            _mainController.api.nuclearis_insertSignature(signerBlock, signaturesPerLine);
+                            processNextSignature();
                         });
                     });
                 }
                 else
                 {
-                    inserirAssinatura(signerBlock);
+                    _mainController.api.nuclearis_insertSignature(signerBlock, signaturesPerLine);
+                    processNextSignature();
                 }
             }
         }
@@ -308,197 +224,8 @@ define([
             );
         }
 
-        var inserirBlockAssinatura = function(Api, oParagraph, data)
-        {
-            //console.log(data);
-            var extras = data.extras != null ? data.extras : [];
-            var imageWidth = data.width != null ? data.width : 300;
-            var imageHeight = data.height != null ? data.height : 200;
-            
-            if(data.image && data.image !== null && data.image !== ''){
-                var oAssinatura = Api.CreateImage(data.image, imageWidth, imageHeight);
-                oAssinatura.SetWrappingStyle('topAndBottom');
-                oAssinatura.SetHorAlign("column", "center");
-                oParagraph.AddDrawing(oAssinatura);
-            }
-            
-            for(var i = 0; i < extras.length;i++){
-                var oRun = Api.CreateRun();
-                oRun.SetColor(0, 0, 0);
-                oRun.AddText(extras[i]);
-                if(i > 0){
-                    oParagraph.AddLineBreak();
-                }
-                oParagraph.AddElement(oRun);
-            }
-                
-            oParagraph.SetJc('center');
-    
-            return oParagraph;
-        }
-
-        var inserirAssinatura = function(data){
-            var logicDocument =  _mainController.api.WordControl.m_oLogicDocument;
-            var contentControls = _mainController.api.pluginMethod_GetAllContentControls();
-            var pluginsApi = window.g_asc_plugins.api;
-
-            logicDocument.Create_NewHistoryPoint(AscDFH.historydescription_Document_InsertSignatureLine);
-
-            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.assinaturasPorLinha){
-                _assinaturasPorLinha = _mainController.editorConfig.assinaturasPorLinha;		
-            }else{
-                _assinaturasPorLinha = 2;
-            }
-
-            var assinaturaContentControl = null;
-            contentControls.forEach(function(control){
-                if(control.Tag == 'ASSINATURAS'){   
-                    assinaturaContentControl = logicDocument.GetContentControl(control.InternalId);
-                }
-            });
-
-            //Não existe content control de Assinatura - vamos criar.
-            if(assinaturaContentControl == null){
-                var type = c_oAscSdtLevelType.Block; //Block
-                
-                var _content_control_pr = new AscCommon.CContentControlPr();
-                _content_control_pr.Tag = "ASSINATURAS";
-                _content_control_pr.Lock = 3;
-
-                var _obj = pluginsApi.asc_AddContentControl(type, _content_control_pr);
-                if (!_obj)
-                    return undefined;
-
-                //var _obj = Api.pluginMethod_AddContentControl(type, {"Lock" : 3});
-
-                logicDocument.ClearContentControl(_obj.InternalId);
-
-                //assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
-
-                //assinaturaContentControl.Content.ClearContent();
-
-                //var scriptAssinatura = createScriptBlockToReplace("ASSINATURAS2", "ASSINATURAS2", true, _obj.InternalId);
-
-                //Api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
-                
-                _mainController.api.nuclearis_redoSignatures();
-
-                assinaturaContentControl = logicDocument.GetContentControl(_obj.InternalId);
-            }       
-
-            //var oDocument = _mainController.api.GetDocument();
-            //oDocument.InsertWatermark("RASCUNHO", true);
-            //oDocument.RemoveWatermark("RASCUNHO");
-
-            var tableElement = assinaturaContentControl.Content.GetElement(0);
-            var tableElementPos = null;
-            for(var c = 0; c < assinaturaContentControl.Content.GetElementsCount(); c++){
-                var element = assinaturaContentControl.Content.GetElement(c);
-                if(element.GetType() == AscCommonWord.type_Table){
-                    tableElement = element;
-                    tableElementPos = c;
-                    break;
-                }
-            }
-
-            if(tableElementPos != null){
-                assinaturaContentControl.Content.ClearContent();
-                assinaturaContentControl.Content.AddContent([tableElement]);
-            }
-
-            //Se o primeiro elemento do content control de assinatura for um paragrafo troca para uma tabela
-            /*
-            if(firstElement.GetType() == AscCommonWord.type_Paragraph){
-                apiOParagraph = Api.private_CreateApiParagraph(firstElement);
-                apiOParagraph.RemoveAllElements();
-                apiOParagraph.AddText("Hello world!");
-
-                console.log(assinaturaContentControl);
-
-                var oParagraph = assinaturaContentControl.Content.GetElement(0);
-            }
-            */
-
-            if(tableElement != null && tableElement.GetType() == AscCommonWord.type_Table){
-                
-                //assinaturaContentControl.Content.Remove_FromContent(1, assinaturaContentControl.Content.GetElementsCount() - 1);
-
-                var tblAssinaturas = tableElement;
-                //Verificar se não nenhuma assinatura até o momento
-                var pCell00 = tblAssinaturas.Get_Row(0).Get_Cell(0).GetContent(0).GetElement(0);
-                if(pCell00.GetText().trim() == 'ASSINATURAS'){
-                    var pCell00Api = pluginsApi.private_CreateApiParagraph(pCell00)
-                    pCell00Api.RemoveAllElements();
-                    inserirBlockAssinatura(pluginsApi, pCell00Api, data);
-                }else{
-                    //Já existe assinatura - adicionar nova coluna (célula) no final
-                    var row = tblAssinaturas.Get_RowsCount() - 1;
-                    var cell = tblAssinaturas.Get_Row(row).Get_CellsCount() - 1;
-
-                    foundedCellEmpty = false;
-                    //Procura por alguma célula vazia, se encontra coloca a assinatura nela;
-                    for(var i = 0;i < tblAssinaturas.Get_RowsCount();i++){
-                        for(var j = 0; j < tblAssinaturas.Get_Row(i).Get_CellsCount();j++){
-                            var pCellIJ = tblAssinaturas.Get_Row(i).Get_Cell(j).GetContent(0).GetElement(0);
-                            if(pCellIJ.GetAllDrawingObjects().length == 0 && pCellIJ.GetText().trim() == ""){
-                                foundedCellEmpty = true;
-                                row = i;
-                                cell = j;
-                                break;
-                            }
-                        }
-
-                        if(foundedCellEmpty) break;
-                    }
-
-                    if(!foundedCellEmpty){
-                        logicDocument.Start_SilentMode();
-                        tblAssinaturas.private_RecalculateGrid();
-                        tblAssinaturas.private_UpdateCellsGrid();
-
-                        var newCell = null;
-                        //Se já tiver n assinaturas em uma linha, adiciona uma nova linha abaixo
-                        //console.log(_assinaturasPorLinha);
-                        if(tblAssinaturas.Get_Row(row).Get_CellsCount() == _assinaturasPorLinha){
-                            newCell = tblAssinaturas.Content[tblAssinaturas.Content.length - 1].Get_Cell(0);
-                            tblAssinaturas.RemoveSelection();
-                            tblAssinaturas.CurCell = newCell;
-                            tblAssinaturas.AddTableRow(false);
-                            row++;
-                            cell = 0;
-                        }else{
-                            newCell = tblAssinaturas.Content[row].Get_Cell(tblAssinaturas.Content[row].Get_CellsCount() - 1);
-                            tblAssinaturas.RemoveSelection();
-                            tblAssinaturas.CurCell = newCell;
-                            tblAssinaturas.AddTableColumn(false);
-                            cell++;
-                        }
-
-                        logicDocument.End_SilentMode(false);
-                    }
-
-                    var lastCellEmpty = tblAssinaturas.Get_Row(row).Get_Cell(cell);
-
-                    var pLastCellEmpty = lastCellEmpty.GetContent(0).GetElement(0);
-                    var pLastCellEmptyApi = pluginsApi.private_CreateApiParagraph(pLastCellEmpty)
-                    //pNewCellApi.RemoveAllElements();
-                    inserirBlockAssinatura(pluginsApi, pLastCellEmptyApi, data);
-
-                    tblAssinaturas.RecalculateAllTables();
-                }
-            } 
-
-            logicDocument.Recalculate();
-        
-            
-            //_mainController.api.pluginMethod_InsertAndReplaceContentControls([scriptAssinatura]);
-
-            processNextSignature();
-        }
-
         var onInit = function(loadConfig) {
         
-            //console.log(loadConfig);
             var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
             if(currentValueAutocompleteAtalho === null){
                 currentValueAutocompleteAtalho = 0;
@@ -529,7 +256,7 @@ define([
 
                 menuAddShortcutPara.menu_item_props = menu_item_props;
 
-                menuAddShortcutPara.menu_item_props.selectedText = _mainController.api.WordControl.m_oLogicDocument.GetSelectedText(true);
+                menuAddShortcutPara.menu_item_props.selectedText = _mainController.api.nuclearis_getSelectedText(true);
 
                 if(menu_item_props.hasSpellCheck && !menu_item_props.spellProps.value.Checked){
                     documentHolderView.textMenu.insertItem(-1, menuAddShortcutPara);
@@ -541,19 +268,17 @@ define([
             _atalhoAutoCompleteMenu = new Common.UI.Menu({
                 items: [ ]
             }).on('item:click', function (menu, item, e) {
-                replaceAtalho(item.value, _atalhos[item.value]);
+                _mainController.api.nuclearis_replaceShortcut(item.value, _atalhos[item.value], _buffer, _itensBuffer);
             });
 
             if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
                 _atalhos = _mainController.editorConfig.atalhos;		
             }
 
-            //Habilita plugin construtor de laudo ao se fechar qualquer outro plugin
+            //Aciona o replace de content controls quand qualquer outro plugin fechar
             if(!_mainController.api.asc_checkNeedCallback('asc_onPluginClose')){
                 _mainController.api.asc_registerCallback('asc_onPluginClose', function(plugin){
-                    if(plugin.guid !== _guidConstrutorDeLaudo){					
-                        startPluginConstrutorDeLaudo();
-                    }
+                    _mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
                 });
             }
 
@@ -610,6 +335,23 @@ define([
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
                 btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
             });
+
+            _mainController.api.asc_registerCallback('nuclearis_onShortcutsFounded', function(itens){
+                if(itens.length > 0){
+                    if(!_.isEqual(itens, _itensBuffer)){
+                        _itensBuffer = itens;
+                        var currentValueAutocompleteShortcut = parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho"))
+                        if(currentValueAutocompleteShortcut === 1){
+                            showShortcutsPopupMenu(itens);          
+                        }                         
+                    }
+                }else{
+                    if(_atalhoAutoCompleteMenu.isVisible()){
+                        _atalhoAutoCompleteMenu.hide();
+                        _itensBuffer = [];
+                    }
+                }
+            });
             
             if(loadConfig.config.mode == "edit"){
                 configureDownloadDocumentAsDocxButton();
@@ -654,7 +396,7 @@ define([
 
             _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
                 if (_state.isFromNuclearisDownloadAsDocx) {
-                    var documentTitle = _mainController.api.documentTitle.toUpperCase();
+                    var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
                     var dataAtendimento = "";
                     if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
                         dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
@@ -666,8 +408,7 @@ define([
                         documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
                     }
 
-                    var oDocument = _mainController.api.GetDocument();
-                    oDocument.RemoveWatermark("RASCUNHO");
+                    _mainController.api.nuclearis_documentRemoveWatermark("RASCUNHO");
                     
                     urltoFile(url, documentTitle).then(function(file){
                         
@@ -697,9 +438,7 @@ define([
 
                 leftMenuView.btnDownloadDocument.setDisabled(true);   
                 
-                var oDocument = _mainController.api.GetDocument();
-                oDocument.InsertWatermark("RASCUNHO", true);
-                _mainController.api.asc_Recalculate();
+                _mainController.api.nuclearis_documentInsertWatermark("RASCUNHO", true);
 
                 _state.isFromNuclearisDownloadAsDocx = true;
                 if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.DOCX, true);
@@ -724,7 +463,7 @@ define([
 
             _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
                 if (_state.isFromNuclearisDownloadAsPdf) {
-                    var documentTitle = _mainController.api.documentTitle.toUpperCase();
+                    var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
                     
                     var dataAtendimento = "";
                     if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
@@ -774,7 +513,7 @@ define([
 
         var handleDocumentKeyUp = function(event){
             if (_mainController.api){
-                searchAtalho(event);
+                _mainController.api.nuclearis_searchShortcut(_buffer, _atalhos, _itensBuffer, _renderMenu, parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho")));
             }
         };
 
@@ -794,7 +533,7 @@ define([
 
                     //Bottom Arrow
                     if(event.keyCode == Common.UI.Keys.DOWN){     
-                        AscCommon.g_inputContext.emulateKeyDownApi(Common.UI.Keys.UP);
+                        _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.UP);
                         _atalhoAutoCompleteMenu.cmpEl.focus();
                         _.delay(function() {
                             _atalhoAutoCompleteMenu.items[0].cmpEl.find('a:first').focus();
@@ -805,7 +544,7 @@ define([
 
                     //Top Arrow
                     if(event.keyCode == Common.UI.Keys.UP){     
-                        AscCommon.g_inputContext.emulateKeyDownApi(Common.UI.Keys.DOWN);
+                        _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.DOWN);
                         _atalhoAutoCompleteMenu.cmpEl.focus();
                         _.delay(function() {
                             var lastItem = _atalhoAutoCompleteMenu.items.length - 1;
@@ -814,23 +553,6 @@ define([
                         _renderMenu = false;
                         return false;
                     }
-
-                    /*
-                    //Esc
-                    if(event.keyCode == Common.UI.Keys.ESC){
-                        _atalhoAutoCompleteMenu.hide();
-                        _renderMenu = false;
-                        _itensBuffer = [];
-                        console.log('Limpando buffer', _itensBuffer);
-                    }
-
-                    //Enter
-                    if(event.keyCode == Common.UI.Keys.RETURN){
-                        _atalhoAutoCompleteMenu.hide();
-                        _renderMenu = false;
-                        _itensBuffer = [];
-                    }
-                    */
                 }
             }
         };
@@ -874,30 +596,13 @@ define([
                     }
                 }, 10);
 
-                /*
-                menu.items.forEach(function(item){
-                    var modalParents = item.cmpEl.closest("div[id^='menu-container-asc']");
-
-                    item.cmpEl.tooltip({
-                        title       : _atalhos[item.value],
-                        placement   : 'bottom-left'
-                    });
-
-                    if (modalParents.length > 0) {
-                        item.cmpEl.data('bs.tooltip').tip().css('z-index', parseInt(modalParents.css('z-index')) + 10);
-                    }
-                });
-                */
-
                 documentHolderView.currentMenu = menu;
             }
         };
 
-        var exibirMenuPopupAtalhos = function(itens){
-            var curPosXY = _mainController.api.WordControl.m_oLogicDocument.GetCurPosXY();
-            var PageIndex = _mainController.api.WordControl.m_oLogicDocument.Controller.GetCurPage();
-            var ConvertedPos = _mainController.api.WordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(curPosXY.X, curPosXY.Y, PageIndex);
-            
+        var showShortcutsPopupMenu = function(itens){
+            var ConvertedPos = _mainController.api.nuclearis_convertCoordsToCursorWR();
+
             var menuData = {Type: 0, X_abs: ConvertedPos.X, Y_abs: ConvertedPos.Y};
 
             _atalhoAutoCompleteMenu.removeAll();
@@ -915,97 +620,6 @@ define([
 
             showPopupMenu(documentHolderView, _atalhoAutoCompleteMenu, {}, menuData, null, null);
         }
-
-        var searchAtalho = function(e)
-        {
-            if (_renderMenu && _mainController.api){
-                
-                var Doc    = _mainController.api.WordControl.m_oLogicDocument;
-        
-                var paraRun = Doc.Get_DocumentPositionInfoForCollaborative();
-
-                var currentValueAutocompleteAtalho = parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho"));
-
-                //var oRunText = new CParagraphGetText();
-                //paraRun.Class.Get_Text(oRunText);
-        
-                if(paraRun != null && paraRun.Class.Content && paraRun.Position >= 1){
-                    var pos = paraRun.Position - 1;
-
-                    if(paraRun.Class.Content[pos].Type == AscCommonWord.ParaSpace.prototype.Get_Type()){
-                        if(currentValueAutocompleteAtalho === 0){
-                            if(_atalhos[_buffer.text] !== undefined){
-                                replaceAtalho(_buffer.text, _atalhos[_buffer.text]);
-                            }
-                        }  
-                        _buffer.startPos = null;
-                        _buffer.endPos = null;  
-                        _buffer.text = '';          
-                    }else{ 
-                        _buffer.endPos = pos;
-                        _buffer.text = '';
-                        while(pos >= 0 && paraRun.Class.Content[pos].Type != null && paraRun.Class.Content[pos].Type == AscCommonWord.ParaText.prototype.Get_Type()){
-                            _buffer.text = String.fromCharCode(paraRun.Class.Content[pos].Value) + _buffer.text;
-                            _buffer.startPos = pos;
-                            pos--;
-                        }
-
-                        if(_buffer.text.length > 1){
-                            var itens = [];
-                            for (var key in _atalhos) {
-                                if (key.startsWith(_buffer.text)) {
-                                    itens.push(key);
-                                }
-                            }
-
-                            if(itens.length > 0){
-                                if(!_.isEqual(itens, _itensBuffer)){
-                                    _itensBuffer = itens;
-                                    if(currentValueAutocompleteAtalho === 1){
-                                        exibirMenuPopupAtalhos(itens);           
-                                    }                         
-                                }
-                            }else{
-                                if(_atalhoAutoCompleteMenu.isVisible()){
-                                    _atalhoAutoCompleteMenu.hide();
-                                    _itensBuffer = [];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        var replaceAtalho = function(atalho, atalho_value){
-            if (_mainController.api){                
-                var Doc    = _mainController.api.WordControl.m_oLogicDocument;
-                var paraRun = Doc.Get_DocumentPositionInfoForCollaborative();
-
-                if(_buffer.startPos < paraRun.Position && _buffer.endPos < paraRun.Position){
-                    paraRun.Class.Selection.Use   = true;
-                    paraRun.Class.Selection.Start = false;
-                    paraRun.Class.Selection.Flag  = AscCommon.selectionflag_Common;
-            
-                    paraRun.Class.Selection.StartPos = _buffer.startPos;
-                    paraRun.Class.Selection.EndPos   = _buffer.endPos;
-
-                    //var selectedText = Doc.GetSelectedText();
-                    
-                    paraRun.Class.Remove_FromContent(_buffer.startPos, atalho.length, true);
-                    paraRun.Class.AddText(atalho_value, _buffer.startPos);
-                    paraRun.Class.Paragraph.Document_SetThisElementCurrent(true);
-                    paraRun.Class.MoveCursorToEndPos(false);
-                    paraRun.Class.State.ContentPos = (_buffer.startPos + atalho_value.length + 1);
-
-                    paraRun.Class.RemoveSelection();
-
-                    _mainController.api.WordControl.m_oLogicDocument.Recalculate();
-
-                    _itensBuffer = [];
-                }
-            }
-        };
 
         Common.Gateway.on('init', onInit);
 
@@ -1070,6 +684,7 @@ define([
             return _atalhos;
         };
 
+        /*
         var startPluginConstrutorDeLaudo = function(){
             
             var plugin = window.g_asc_plugins.getPluginByGuid(_guidConstrutorDeLaudo);
@@ -1083,6 +698,7 @@ define([
                 window.g_asc_plugins.run(_guidConstrutorDeLaudo, 0, pluginData, true);
             }	
         }
+        */
         
         String.prototype.replaceAll = function(search, replacement) {
             var target = this;

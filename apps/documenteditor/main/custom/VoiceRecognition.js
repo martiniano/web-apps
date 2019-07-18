@@ -18,12 +18,11 @@ define([
         var _mainController = null;
         var _recognition = null;
         var _started = false;
-        var _first = true;
-        var _lastNewLine = true;
+
+
         var _autorestartCount = 0;
         var _lastStartedAt = null;
-        var _paraRunInitialPosition = 0;
-        var _paraRunFinalPosition = 0;
+
         var _keyReplaces = [];
         var _timeOut;
         var _errorAlert = false;
@@ -196,8 +195,7 @@ define([
                 };
             
                 _recognition.onresult = function (event) {
-                    console.log('Result Recognition', event);
-                    writeTranscriptedText(event);
+                    _mainController.api.nuclearis_writeTranscriptedText(event)
                 };
 
                 _recognition.onerror = function(event){
@@ -207,7 +205,7 @@ define([
                     var config = {
                       closable: false,
                       title: "Erro ativar reconhecimento de voz.",
-                      msg: event.error+" - O reconhecimento de voz necessita de acesso seguro (https) - consulte o adminstrador do sistema.",
+                      msg: event.error,
                       iconCls: 'alert',
                       buttons: ['ok']
                     };
@@ -219,11 +217,15 @@ define([
 								}
 
                 _keyReplaces = Object.assign([], _keyReplacesDefault);
+                _mainController.api.nuclearis_initVoiceRecognition(_keyReplaces);
+
+                _mainController.api.asc_registerCallback('nuclearis_onChangeVoiceRegStatus', function(status){
+                  updateIcon(status);
+                });
             }
         }
 
         var restartVoiceRecognition = function (reason) {
-          //console.log('restartVoiceRecognition');
           // play nicely with the browser, and never restart annyang automatically more than once per second
           var timeSinceLastStart = new Date().getTime() - _lastStartedAt;
           _autorestartCount += 1;
@@ -263,123 +265,6 @@ define([
               break;
           }
         };
-
-        var replaceAll = function(str, token, newtoken) {
-	        while (str.indexOf(token) != -1)
-	            str = str.replace(token, newtoken);
-
-	        return str;
-	      }
-
-        var writeTranscriptedText = function(event){
-            var logicalDocument = _mainController.api.WordControl.m_oLogicDocument;
-            var paraRun = logicalDocument.Get_DocumentPositionInfoForCollaborative();
-            var texto = "";
-            var textoTemp = "";
-        
-            if (event.results === undefined) return;
-        
-            for (var i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                texto += event.results[i][0].transcript;
-                texto = replaceAll(texto, '\n', 'nova linha');
-                _keyReplaces.forEach(function (item) {
-                  texto = texto.replace(item.key, item.value);
-                });
-              } else {
-                if(_first) {
-                  updateIcon("OUVINDO");
-                  _first = false;
-                  _paraRunInitialPosition = paraRun.Position;
-                  _paraRunFinalPosition = _paraRunInitialPosition;
-                }
-
-                textoTemp += event.results[i][0].transcript;
-                textoTemp = replaceAll(textoTemp, '\n', 'nova linha');
-                //console.log(textoTemp);
-                paraRun.Class.Remove_FromContent(_paraRunInitialPosition, _paraRunFinalPosition, true);
-                paraRun.Class.AddText(textoTemp, _paraRunInitialPosition);
-                paraRun.Class.MoveCursorToEndPos(false);
-                _paraRunFinalPosition = textoTemp.length;
-                
-                logicalDocument.Recalculate();
-              }
-            }
-
-            //console.log(texto);
-            //_mainController.api.nuclearis_InsertText(texto);
-        
-            if (!texto) return;
-        
-            updateIcon("ATIVADO");
-            if(_lastNewLine){
-              if(texto.substring(0,1) === " ")
-                texto = texto.substring(1,texto.length);
-            }
-        
-            var pontoNewText = '';
-            const pontoSplit = texto.split('.');
-            if(pontoSplit.length > 2) {
-              for (var i = 0; i < pontoSplit.length; i++) {
-                var text = pontoSplit[i];
-        
-                if (i === 0)
-                  pontoNewText = text;
-                else if (text[0] === ' ' && text[0] !== undefined)
-                  text = '. ' + text[1].toUpperCase() + text.substring(2, text.length).toString();
-                else if (text[0] !== ' ' && text[0] !== undefined)
-                  text = '.' + text[0].toUpperCase() + text.substring(1, text.length).toString();
-        
-                if (i > 0)
-                  pontoNewText += text;
-              }
-        
-              texto = pontoNewText;
-            }
-        
-            var textoArray = texto.split('{$}');
-            paraRun.Class.Remove_FromContent(_paraRunInitialPosition, _paraRunFinalPosition, true);
-            for(var i=0; i < textoArray.length; i++){
-              var param = textoArray[i];
-              if(param === 'paragraph') {
-               logicalDocument.AddNewParagraph(true, true);
-               paraRun = logicalDocument.Get_DocumentPositionInfoForCollaborative();
-              }else if(param === 'newLine') {
-                _mainController.api.nuclearis_AddLineBreak();
-                paraRun = logicalDocument.Get_DocumentPositionInfoForCollaborative();
-              }else {
-                if(param.length > 0){
-                  paraRun.Class.AddText(param);
-                  paraRun.Class.MoveCursorToEndPos(false);
-                }
-
-                //Retira o espaço em branco do Inicio do Paragrafo
-                if(paraRun.Class.Content.length > 0 && paraRun.Class.Content[0].Type == AscCommonWord.ParaSpace.prototype.Get_Type()){
-                  paraRun.Class.Remove_FromContent(0, 1, true);
-                  paraRun.Class.MoveCursorToEndPos(false);
-                }
-
-                //Altera primeira letra para maiusculo
-                if(paraRun.Class.Content.length > 0 && paraRun.Class.Content[0].Type == AscCommonWord.ParaText.prototype.Get_Type()){
-                  var letter = String.fromCharCode(paraRun.Class.Content[0].Value);
-                  paraRun.Class.Remove_FromContent(0, 1, true);
-                  paraRun.Class.AddText(letter.toUpperCase(), 0);
-                  paraRun.Class.MoveCursorToEndPos(false);
-                }
-              }
-        
-              logicalDocument.Recalculate();
-            }
-            
-        
-            _first = true;
-
-            if(textoArray[textoArray.length-1] === "" && textoArray[textoArray.length-2] === "newLine")
-              _lastNewLine = true;
-            else
-              _lastNewLine = false;
-        
-        }
 
         Common.Gateway.on('init', onInit);
 
