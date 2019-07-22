@@ -41,17 +41,18 @@ define([
         var onInternalCommand = function(objData) 
         {            
             //Force Save
-            if(objData != null && objData.command == 'forceSave')
+            if ( objData != null && objData.command == "forceSave" )
             {
                 window.AscDesktopEditor_Save();
             }
 
             //Inserir Assinatura
-            if(objData != null && objData.command == 'inserirAssinatura')
+            if ( objData != null && objData.command == "inserirAssinatura" )
             {
                 _signaturesBlock = objData.data;
                 
-                if(!_signaturesBlock.signatures){
+                if ( !_signaturesBlock.signatures )
+                {
                     //Não tem campo signatures, está no padrão antigo, ajustar
                     _signaturesBlock = {
                         redoSignatures: false,
@@ -66,7 +67,8 @@ define([
                     }
                 }
 
-                if(_signaturesBlock.redoSignatures){
+                if ( _signaturesBlock.redoSignatures )
+                {
                     _mainController.api.nuclearis_redoSignatures();
                 }
 
@@ -74,69 +76,76 @@ define([
             }
 
             //getDocInfo
-            if(objData != null && objData.command == 'getDocInfo')
+            if ( objData != null && objData.command == "getDocInfo" )
             {
                 _mainController.api.startGetDocInfo();
             }
 
-            if(objData != null && objData.command == 'insertMeasurementHyperlink')
+            if ( objData != null && objData.command == "insertMeasurementHyperlink" )
             {
                 insertMeasurementHyperlink(objData.data);
             }
 
-            if(objData != null && objData.command == 'removeMeasurementHyperlink')
+            if ( objData != null && objData.command == "removeMeasurementHyperlink" )
             {
                 _mainController.api.nuclearis_removeMeasurementHyperlink(objData.data);
             }
 
-            if(objData != null && objData.command == 'replaceContentControls')
+            if ( objData != null && objData.command == "replaceContentControls" )
             {
                 _mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
             }
 
-            if(objData != null && objData.command == 'uploadAndInsertImage')
+            if ( objData != null && objData.command == "uploadAndInsertImage" )
             {
                 uploadAndInsertImage(objData.data);
             }
             
         };
 
-        var insertMeasurementHyperlink = function(hyperlink){
+        var insertMeasurementHyperlink = function(hyperlink)
+        {
             var props, text;
 
-            if (hyperlink && _mainController.api){
+            if ( hyperlink && _mainController.api )
+            {
 
                 props   = new Asc.CHyperlinkProperty(),
                 url     = $.trim(hyperlink.url);
 
-                if (! /(((^https?)|(^measurement)):\/\/)|(^mailto:)/i.test(url) )
+                if ( ! /(((^https?)|(^measurement)):\/\/)|(^mailto:)/i.test(url) )
                     url = 'measurement://'  + url;
 
                 url = url.replace(new RegExp("%20",'g')," ");
 
-
                 text = _mainController.api.can_AddHyperlink();
 
-                if (text !== false) {
+                if ( text !== false ) 
+                {
                     props.put_Value(url);
                     props.put_Text(hyperlink.text);
                     props.put_ToolTip(hyperlink.tooltip);
 
-                    if(!_.isEmpty($.trim(text))) {
+                    if ( !_.isEmpty($.trim(text)) ) 
+                    {
                         props.put_Text(text);
                     }
 
                     _mainController.api.add_Hyperlink(props);
-                }else{
+                }
+                else
+                {
                     var selectedElements = _mainController.api.getSelectedElements();
-                    if (selectedElements && _.isArray(selectedElements)){
-                        _.each(selectedElements, function(el, i) {
-                            if (selectedElements[i].get_ObjectType() == Asc.c_oAscTypeSelectElement.Hyperlink)
+                    if ( selectedElements && _.isArray(selectedElements) )
+                    {
+                        _.each( selectedElements, function(el, i) {
+                            if ( selectedElements[i].get_ObjectType() == Asc.c_oAscTypeSelectElement.Hyperlink )
                                 props = selectedElements[i].get_ObjectValue();
                         });
                     }
 
-                    if (props) {
+                    if ( props ) 
+                    {
                         props.put_Value(url);
                         props.put_ToolTip(hyperlink.tooltip);
                         _mainController.api.change_Hyperlink(props);
@@ -150,7 +159,7 @@ define([
         }
 
         var uploadAndInsertImage = function(base64Image){
-            if(!_.isEmpty(base64Image))
+            if ( !_.isEmpty(base64Image) )
             {
                 urltoFile(base64Image, generateRandomName()+'.png').then(function(file)
                 {
@@ -159,11 +168,15 @@ define([
             }
         }
 
-        var processNextSignature = function(){
-            if(_signaturesBlock.signatures.length > 0){
+        var processNextSignature = function()
+        {
+            if ( _signaturesBlock.signatures.length > 0 )
+            {
                 var signature = _signaturesBlock.signatures.shift();
                 processSignatureBlock(signature);
-            }else{
+            }
+            else
+            {
                 // var config = {
                 //     closable: false,
                 //     title: "Sucesso",
@@ -180,16 +193,18 @@ define([
             }
         }
 
-        var processSignatureBlock = function(signerBlock){
+        var processSignatureBlock = function(signerBlock)
+        {
             var signaturesPerLine = 2;
-            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.signaturesPerLine){
+            if ( _mainController && _mainController.editorConfig && _mainController.editorConfig.signaturesPerLine )
+            {
                 signaturesPerLine = _mainController.editorConfig.signaturesPerLine;		
             }
             
-            if(signerBlock != null)
+            if ( signerBlock != null )
             {
                 //Verifica se assintura tem imagem, se sim, carrega a imagem antes de inserir assinatura
-                if(signerBlock.image && signerBlock.image !== null && signerBlock.image !== '')
+                if ( signerBlock.image && signerBlock.image !== null && signerBlock.image !== '' )
                 {
                     urltoFile(signerBlock.image, generateRandomName()+'.png').then(function(file)
                     {
@@ -209,7 +224,8 @@ define([
         }
 
         //return a promise that resolves with a File instance
-        var urltoFile = function(url, filename, mimeType){
+        var urltoFile = function(url, filename, mimeType)
+        {
             mimeType = mimeType || (url.match(/^data:([^;]+);/)||'')[1];
             return (fetch(url)
                 .then(function(res){
@@ -227,12 +243,14 @@ define([
         var onInit = function(loadConfig) {
         
             var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
-            if(currentValueAutocompleteAtalho === null){
+            if ( currentValueAutocompleteAtalho === null )
+            {
                 currentValueAutocompleteAtalho = 0;
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", currentValueAutocompleteAtalho);
             }
 
-            if(_mainController == null){
+            if ( _mainController == null )
+            {
                 try { _mainController = DE.getController('Main'); } catch(e) {
                     try { _mainController = PE.getController('Main'); } catch(e) {
                         try { _mainController =  SSE.getController('Main'); } catch(e) {}
@@ -249,7 +267,8 @@ define([
 
             menuAddShortcutPara.setVisible(true);
 
-            _mainController.api.asc_registerCallback('asc_onContextMenu', function(){
+            _mainController.api.asc_registerCallback('asc_onContextMenu', function()
+            {
                 
                 var selectedElements =  _mainController.api.getSelectedElements();
                 var menu_item_props = getMenuItemProps(selectedElements);
@@ -258,9 +277,12 @@ define([
 
                 menuAddShortcutPara.menu_item_props.selectedText = _mainController.api.nuclearis_getSelectedText(true);
 
-                if(menu_item_props.hasSpellCheck && !menu_item_props.spellProps.value.Checked){
+                if ( menu_item_props.hasSpellCheck && !menu_item_props.spellProps.value.Checked )
+                {
                     documentHolderView.textMenu.insertItem(-1, menuAddShortcutPara);
-                }else{
+                }
+                else
+                {
                     documentHolderView.textMenu.insertItem(0, menuAddShortcutPara);
                 } 
             });
@@ -271,22 +293,28 @@ define([
                 _mainController.api.nuclearis_replaceShortcut(item.value, _atalhos[item.value], _buffer, _itensBuffer);
             });
 
-            if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
+            if ( _mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos )
+            {
                 _atalhos = _mainController.editorConfig.atalhos;		
             }
 
             //Aciona o replace de content controls quand qualquer outro plugin fechar
-            if(!_mainController.api.asc_checkNeedCallback('asc_onPluginClose')){
-                _mainController.api.asc_registerCallback('asc_onPluginClose', function(plugin){
+            if ( !_mainController.api.asc_checkNeedCallback('asc_onPluginClose') )
+            {
+                _mainController.api.asc_registerCallback('asc_onPluginClose', function(plugin)
+                {
                     _mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
                 });
             }
 
-            if(!_mainController.api.asc_checkNeedCallback('asc_onPluginShow')){
-                _mainController.api.asc_registerCallback('asc_onPluginShow', function(plugin){
-                    if(plugin.guid === _guidNuclearisMacros){					
+            if ( !_mainController.api.asc_checkNeedCallback('asc_onPluginShow' ))
+            {
+                _mainController.api.asc_registerCallback('asc_onPluginShow', function(plugin)
+                {
+                    if ( plugin.guid === _guidNuclearisMacros )
+                    {					
                         var _plugin = window.g_asc_plugins.runnedPluginsMap[_guidNuclearisMacros];
-                        if (!_plugin)
+                        if ( !_plugin )
                             return;
 
                         _plugin.startData.setAttribute("macros", _mainController.editorConfig.macros);
@@ -296,22 +324,25 @@ define([
             }
 
             //Estatisticas
-            _mainController.api.asc_registerCallback('asc_onDocInfo', function(obj){
-                if (obj) {
-                    if (obj.get_PageCount() > -1)
+            _mainController.api.asc_registerCallback('asc_onDocInfo', function(obj)
+            {
+                if ( obj ) 
+                {
+                    if ( obj.get_PageCount() > -1 )
                         _infoObj.PageCount = obj.get_PageCount();
-                    if (obj.get_WordsCount() > -1)
+                    if ( obj.get_WordsCount() > -1 )
                         _infoObj.WordsCount = obj.get_WordsCount();
-                    if (obj.get_ParagraphCount() > -1)
+                    if ( obj.get_ParagraphCount() > -1 )
                         _infoObj.ParagraphCount = obj.get_ParagraphCount();
-                    if (obj.get_SymbolsCount() > -1)
+                    if ( obj.get_SymbolsCount() > -1 )
                         _infoObj.SymbolsCount = obj.get_SymbolsCount();
-                    if (obj.get_SymbolsWSCount() > -1)
+                    if ( obj.get_SymbolsWSCount() > -1 )
                         _infoObj.SymbolsWSCount = obj.get_SymbolsWSCount();
                 }
             });
 
-            _mainController.api.asc_registerCallback('asc_onGetDocInfoEnd', function(){
+            _mainController.api.asc_registerCallback('asc_onGetDocInfoEnd', function()
+            {
                 Common.Gateway.metaChange({type: 'docInfo' ,info:  _infoObj});
             });
 
@@ -329,55 +360,72 @@ define([
             var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
             btnCompleteAtalho.toggle(currentValueAutocompleteAtalho===null || parseInt(currentValueAutocompleteAtalho) == 1, true);
 
-            btnCompleteAtalho.on('click', function() {
+            btnCompleteAtalho.on('click', function() 
+            {
                 var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");;
                 value = 1 - value;
                 Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
                 btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
             });
 
-            _mainController.api.asc_registerCallback('nuclearis_onShortcutsFounded', function(itens){
-                if(itens.length > 0){
-                    if(!_.isEqual(itens, _itensBuffer)){
+            _mainController.api.asc_registerCallback('nuclearis_onShortcutsFounded', function(itens)
+            {
+                if ( itens.length > 0 )
+                {
+                    if ( !_.isEqual(itens, _itensBuffer ))
+                    {
                         _itensBuffer = itens;
                         var currentValueAutocompleteShortcut = parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho"))
-                        if(currentValueAutocompleteShortcut === 1){
+                        if ( currentValueAutocompleteShortcut === 1 )
+                        {
                             showShortcutsPopupMenu(itens);          
                         }                         
                     }
-                }else{
-                    if(_atalhoAutoCompleteMenu.isVisible()){
+                }
+                else
+                {
+                    if ( _atalhoAutoCompleteMenu.isVisible() )
+                    {
                         _atalhoAutoCompleteMenu.hide();
                         _itensBuffer = [];
                     }
                 }
             });
             
-            if(loadConfig.config.mode == "edit"){
+            if ( loadConfig.config.mode == "edit" )
+            {
                 configureDownloadDocumentAsDocxButton();
                 configureDownloadDocumentAsPdfButton();
                 
-                _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function(){
+                _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function()
+                {
                     _mainController.api.nuclearis_registerCallbacks();
                 });
             }
 
-            _mainController.api.asc_registerCallback('asc_onHyperlinkClick', function(url){
-                if (url) {
-                    if(url.startsWith("measurement://")){
+            _mainController.api.asc_registerCallback('asc_onHyperlinkClick', function(url)
+            {
+                if ( url ) 
+                {
+                    if ( url.startsWith("measurement://") )
+                    {
                         Common.Gateway.internalMessage('showMeasurement', url.replace("measurement://", ""));
-                    }else{
+                    }
+                    else
+                    {
                         window.open(url);
                     }
                 }
             });
 
-            // _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function (){
-            //     this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
-            // });
+            _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function ()
+            {
+                 this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
+            });
         };      
 
-        var configureDownloadDocumentAsDocxButton = function(){
+        var configureDownloadDocumentAsDocxButton = function()
+        {
             var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
             leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-docx" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
@@ -394,16 +442,20 @@ define([
             leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-size', "14px 14px");
 
 
-            _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
-                if (_state.isFromNuclearisDownloadAsDocx) {
+            _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url)
+            {
+                if ( _state.isFromNuclearisDownloadAsDocx ) 
+                {
                     var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
                     var dataAtendimento = "";
-                    if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
+                    if ( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento'] )
+                    {
                         dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
                         documentTitle = dataAtendimento + "_" + documentTitle;
                     }
 
-                    if(_mainController.editorConfig.patientName){
+                    if ( _mainController.editorConfig.patientName )
+                    {
                         var patientName = _mainController.editorConfig.patientName;
                         documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
                     }
@@ -414,7 +466,8 @@ define([
                         
                         var reader = new FileReader();
 
-                        reader.addEventListener("load", function () {
+                        reader.addEventListener("load", function () 
+                        {
                             const anchor = document.createElement('a');
                             anchor.setAttribute('href', this.result);
                             anchor.setAttribute('download', file.name);
@@ -428,12 +481,14 @@ define([
                         reader.readAsDataURL(file);
                     });
                 }
+
                 _state.isFromNuclearisDownloadAsDocx = false;
                 leftMenuView.btnDownloadDocument.setDisabled(false); 
             });
 
-            leftMenuView.btnDownloadDocument.on('click', function() {
-                if (leftMenuView.btnDownloadDocument.isActive())
+            leftMenuView.btnDownloadDocument.on('click', function() 
+            {
+                if ( leftMenuView.btnDownloadDocument.isActive() )
                     leftMenuView.btnDownloadDocument.toggle(false);
 
                 leftMenuView.btnDownloadDocument.setDisabled(true);   
@@ -445,7 +500,8 @@ define([
             });
         };
 
-        var configureDownloadDocumentAsPdfButton = function(){
+        var configureDownloadDocumentAsPdfButton = function()
+        {
             var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
             leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-pdf" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
             //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
@@ -462,23 +518,27 @@ define([
             leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-size', "14px 14px");
 
             _mainController.api.asc_registerCallback('asc_onDownloadUrl', function(url){
-                if (_state.isFromNuclearisDownloadAsPdf) {
+                if ( _state.isFromNuclearisDownloadAsPdf ) 
+                {
                     var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
                     
                     var dataAtendimento = "";
-                    if( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']){
+                    if ( _mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento'] )
+                    {
                         dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
                         documentTitle = dataAtendimento + "_" + documentTitle;
                     }
                     
-                    if(_mainController.editorConfig.patientName){
+                    if ( _mainController.editorConfig.patientName )
+                    {
                         var patientName = _mainController.editorConfig.patientName;
                         documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle.replaceAll('DOCX', 'PDF');
                     }
 
                     _mainController.api.nuclearis_removeWatermark();
                     
-                    urltoFile(url, documentTitle).then(function(file){
+                    urltoFile(url, documentTitle).then(function(file)
+                    {
                         var reader = new FileReader();
                         reader.addEventListener("load", function () {
                             const anchor = document.createElement('a');
@@ -494,12 +554,14 @@ define([
                         reader.readAsDataURL(file);
                     });
                 }
+
                 _state.isFromNuclearisDownloadAsPdf = false;
                 leftMenuView.btnDownloadDocumentPdf.setDisabled(false); 
             });
 
-            leftMenuView.btnDownloadDocumentPdf.on('click', function() {
-                if (leftMenuView.btnDownloadDocumentPdf.isActive())
+            leftMenuView.btnDownloadDocumentPdf.on('click', function() 
+            {
+                if ( leftMenuView.btnDownloadDocumentPdf.isActive() )
                     leftMenuView.btnDownloadDocumentPdf.toggle(false);
 
                 leftMenuView.btnDownloadDocumentPdf.setDisabled(true); 
@@ -511,28 +573,36 @@ define([
             });
         };
 
-        var handleDocumentKeyUp = function(event){
-            if (_mainController.api){
+        var handleDocumentKeyUp = function(event)
+        {
+            if ( _mainController.api )
+            {
                 _mainController.api.nuclearis_searchShortcut(_buffer, _atalhos, _itensBuffer, _renderMenu, parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho")));
             }
         };
 
-        var handleDocumentKeyDown = function(event){
-            if (_mainController.api){
+        var handleDocumentKeyDown = function(event)
+        {
+            if ( _mainController.api )
+            {
                 //var key = event.keyCode;
 
-                if(_atalhos == null){
-                    if(_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos){
+                if ( _atalhos == null )
+                {
+                    if ( _mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos )
+                    {
                         _atalhos = _mainController.editorConfig.atalhos;		
                     }
                 } 
 
                 _renderMenu = true;
                 _itensBuffer = [];
-                if(_atalhoAutoCompleteMenu.isVisible()){
+                if ( _atalhoAutoCompleteMenu.isVisible() )
+                {
 
                     //Bottom Arrow
-                    if(event.keyCode == Common.UI.Keys.DOWN){     
+                    if ( event.keyCode == Common.UI.Keys.DOWN )
+                    {     
                         _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.UP);
                         _atalhoAutoCompleteMenu.cmpEl.focus();
                         _.delay(function() {
@@ -543,7 +613,8 @@ define([
                     }
 
                     //Top Arrow
-                    if(event.keyCode == Common.UI.Keys.UP){     
+                    if ( event.keyCode == Common.UI.Keys.UP )
+                    {     
                         _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.DOWN);
                         _atalhoAutoCompleteMenu.cmpEl.focus();
                         _.delay(function() {
@@ -558,16 +629,20 @@ define([
         };
 
 
-        var showPopupMenu = function(documentHolderView, menu, value, event, docElement, eOpts){
-            if (!_.isUndefined(menu)  && menu !== null){
+        var showPopupMenu = function(documentHolderView, menu, value, event, docElement, eOpts)
+        {
+            if ( !_.isUndefined(menu)  && menu !== null )
+            {
                 Common.UI.Menu.Manager.hideAll();
 
                 var showPoint = [event.X_abs, event.Y_abs],
                     menuContainer = $(documentHolderView.$el).find(Common.Utils.String.format('#menu-container-{0}', menu.id));
 
-                if (!menu.rendered) {
+                if ( !menu.rendered ) 
+                {
                     // Prepare menu container
-                    if (menuContainer.length < 1) {
+                    if ( menuContainer.length < 1 ) 
+                    {
                         menuContainer = $(Common.Utils.String.format('<div id="menu-container-{0}" style="position: absolute; z-index: 10000;"><div class="dropdown-toggle" data-toggle="dropdown"></div></div>', menu.id));
                         $(documentHolderView.$el).append(menuContainer);
                     }
@@ -583,14 +658,15 @@ define([
 
                 menu.show();
 
-                if (_.isFunction(menu.options.initMenu)) {
+                if ( _.isFunction(menu.options.initMenu) ) 
+                {
                     menu.options.initMenu(value);
                     menu.alignPosition();
                 }
 
                 _.delay(function() {
                     //menu.cmpEl.focus();
-                    if(menu.items.length == 1){
+                    if (menu.items.length == 1){
                         menu.items[0].cmpEl.addClass('over');
                         menu.items[0].cmpEl.find('a:first').focus();
                     }
@@ -600,13 +676,15 @@ define([
             }
         };
 
-        var showShortcutsPopupMenu = function(itens){
+        var showShortcutsPopupMenu = function(itens)
+        {
             var ConvertedPos = _mainController.api.nuclearis_convertCoordsToCursorWR();
 
             var menuData = {Type: 0, X_abs: ConvertedPos.X, Y_abs: ConvertedPos.Y};
 
             _atalhoAutoCompleteMenu.removeAll();
-            for(var i = 0; i < itens.length ;i++){
+            for( var i = 0; i < itens.length ;i++ )
+            {
                 var menuItemAtalho = new Common.UI.MenuItem({
                     caption: Common.Utils.String.ellipsis(itens[i] + ' - ' + _atalhos[itens[i]], 80, true),
                     value: itens[i]
@@ -629,22 +707,28 @@ define([
 
         $(document).on('keydown', handleDocumentKeyDown);
 
-        var adicionarAtalhoDialog = function(item, e, eOpt){
+        var adicionarAtalhoDialog = function(item, e, eOpt)
+        {
             var win;
             var application = _mainController.getApplication();
             var documentHolderView =  application.getController('DocumentHolder').getView('DocumentHolder');
             
-            if(_categoriasDeAtalho == null){
-                if(_mainController && _mainController.editorConfig && _mainController.editorConfig.categoriasDeAtalho){
+            if ( _categoriasDeAtalho == null )
+            {
+                if ( _mainController && _mainController.editorConfig && _mainController.editorConfig.categoriasDeAtalho )
+                {
                     _categoriasDeAtalho = _mainController.editorConfig.categoriasDeAtalho;		
                 }
             }       
             
-            if (_mainController.api){
+            if ( _mainController.api )
+            {
                 win = new DE.Views.AtalhoSettingsDialog({
                     api: _mainController.api,
-                    handler: function(dlg, result) {
-                        if (result == 'ok') {
+                    handler: function(dlg, result) 
+                    {
+                        if ( result == 'ok' ) 
+                        {
                             var _props = dlg.getSettings();
                             Common.Gateway.metaChange({type: 'adicionarAtalho',props:  _props});
                             _atalhos[_props.sigla] = _props.atalho_texto; 
@@ -659,19 +743,23 @@ define([
             }
         };
 
-        var getMenuItemProps = function(selectedElements) {
-            if (!selectedElements || !_.isArray(selectedElements)) return;
+        var getMenuItemProps = function(selectedElements) 
+        {
+            if ( !selectedElements || !_.isArray(selectedElements) ) return;
             var menu_props = {};
-            for (var i = 0; i <selectedElements.length; i++) {
+            for ( var i = 0; i <selectedElements.length; i++ ) 
+            {
                 var elType = selectedElements[i].get_ObjectType();
                 var elValue = selectedElements[i].get_ObjectValue();
-                if (Asc.c_oAscTypeSelectElement.Paragraph == elType)
+                if ( Asc.c_oAscTypeSelectElement.Paragraph == elType )
                 {
                     menu_props.paraProps = {};
                     menu_props.paraProps.value = elValue;
                     menu_props.paraProps.locked = (elValue) ? elValue.get_Locked() : false;
                     noobject = false;
-                } else if (Asc.c_oAscTypeSelectElement.SpellCheck == elType) {
+                } 
+                else if ( Asc.c_oAscTypeSelectElement.SpellCheck == elType ) 
+                {
                     menu_props.spellProps = {};
                     menu_props.spellProps.value = elValue;
                     menu_props.hasSpellCheck = true;
@@ -680,18 +768,21 @@ define([
             return menu_props;
         };
 
-        var _getAtalhos = function() {
+        var _getAtalhos = function() 
+        {
             return _atalhos;
         };
 
         /*
-        var startPluginConstrutorDeLaudo = function(){
+        var startPluginConstrutorDeLaudo = function()
+        {
             
             var plugin = window.g_asc_plugins.getPluginByGuid(_guidConstrutorDeLaudo);
-            if (!plugin)
+            if ( !plugin )
                 return;
             var isRunned = (window.g_asc_plugins.runnedPluginsMap[_guidConstrutorDeLaudo] !== undefined) ? true : false;	
-            if(!isRunned){
+            if ( !isRunned )
+            {
                 
                 var pluginData = new window.Asc.CPluginData();
                 
@@ -700,7 +791,8 @@ define([
         }
         */
         
-        String.prototype.replaceAll = function(search, replacement) {
+        String.prototype.replaceAll = function(search, replacement) 
+        {
             var target = this;
             return target.replace(new RegExp(search, 'g'), replacement);
         };
