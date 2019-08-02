@@ -201,11 +201,16 @@ define([
                 _recognition.onerror = function(event){
                   console.error("onerror", event);
 
+                  var msgError = event.error;
+                  if(event.error == "no-speech"){
+                    msgError = "Desativando reconhecimento de voz devido a grande período de inatividade.";
+                  }
+
                   if(!_errorAlert){
                     var config = {
                       closable: false,
-                      title: "Erro ativar reconhecimento de voz.",
-                      msg: event.error,
+                      title: "Erro no reconhecimento de voz.",
+                      msg: msgError,
                       iconCls: 'alert',
                       buttons: ['ok']
                     };

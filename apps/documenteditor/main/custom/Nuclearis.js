@@ -43,7 +43,7 @@ define([
             //Force Save
             if ( objData != null && objData.command == "forceSave" )
             {
-                window.AscDesktopEditor_Save();
+                _mainController.api.asc_Save(false, false, false);
             }
 
             //Inserir Assinatura
@@ -93,7 +93,10 @@ define([
 
             if ( objData != null && objData.command == "replaceContentControls" )
             {
-                _mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
+                var items = {};
+                Object.assign(items, _mainController.editorConfig.macros, objData.data);
+                //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
+                _mainController.api.nuclearis_replaceContentControls(items);
             }
 
             if ( objData != null && objData.command == "uploadAndInsertImage" )
