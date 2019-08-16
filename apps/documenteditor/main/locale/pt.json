@@ -266,6 +266,7 @@
   "DE.Controllers.Main.textAnonymous": "Anônimo",
   "DE.Controllers.Main.textBuyNow": "Visitar website",
   "DE.Controllers.Main.textChangesSaved": "Todas as alterações foram salvas",
+  "DE.Controllers.Main.textChangesForceSaved": "Todas as alterações foram salvas e uma versão foi criada.",
   "DE.Controllers.Main.textCloseTip": "Clique para fechar a dica",
   "DE.Controllers.Main.textContactUs": "Contate as vendas",
   "DE.Controllers.Main.textLoadingDocument": "Carregando documento",

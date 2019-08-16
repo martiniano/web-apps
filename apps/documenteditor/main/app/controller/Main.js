@@ -465,7 +465,7 @@ define([
                                     docId: version.key,
                                     markedAsVersion: (group!==version.versionGroup),
                                     selected: (opts.data.currentVersion == version.version),
-                                    canRestore: this.appOptions.canHistoryRestore && (version.version != opts.data.currentVersion),
+                                    canRestore: this.appOptions.canEdit && this.appOptions.canHistoryRestore && (version.version != opts.data.currentVersion),
                                     isExpanded: true,
                                     serverVersion: version.serverVersion
                                 }));
@@ -628,14 +628,17 @@ define([
                     this.setLongActionView(action)
                 } else {
                     if ((id==Asc.c_oAscAsyncAction['Save'] || id==Asc.c_oAscAsyncAction['ForceSaveButton']) && !this.appOptions.isOffline) {
+                        
+                        var textChanges = id==Asc.c_oAscAsyncAction['ForceSaveButton'] ? this.textChangesForceSaved : this.textChangesSaved; 
+                        
                         if (this._state.fastCoauth && this._state.usersCount>1) {
                             var me = this;
                             me._state.timerSave = setTimeout(function () {
-                                me.getApplication().getController('Statusbar').setStatusCaption(me.textChangesSaved, false, 3000);
+                                me.getApplication().getController('Statusbar').setStatusCaption(textChanges, false, 3000);
                             }, 500);
                         } else
-                            this.getApplication().getController('Statusbar').setStatusCaption(this.textChangesSaved, false, 3000);
-
+                            this.getApplication().getController('Statusbar').setStatusCaption(textChanges, false, 3000);
+                            
                         this.loadMask && this.loadMask.hide();
                     } else
                         this.getApplication().getController('Statusbar').setStatusCaption('');
@@ -1083,6 +1086,11 @@ define([
 
                 this.applyModeCommonElements();
                 this.applyModeEditorElements();
+
+                //Nuclearis
+                this.api.asc_setAutoSaveInterval(this.editorConfig.autoSaveInterval);
+                this.api.asc_setForceSaveOnAutoSave(this.editorConfig.forceSaveOnAutoSave);
+                this.api.asc_setMinLengthOfChanges(this.editorConfig.minLengthOfChanges);
 
                 this.api.asc_setViewMode(!this.appOptions.isEdit && !this.appOptions.canComments);
                 (!this.appOptions.isEdit && this.appOptions.canComments) && this.api.asc_setRestriction(Asc.c_oAscRestrictionType.OnlyComments);
@@ -2141,6 +2149,7 @@ define([
             titleServerVersion: 'Editor updated',
             errorServerVersion: 'The editor version has been updated. The page will be reloaded to apply the changes.',
             textChangesSaved: 'All changes saved',
+            textChangesForceSaved: 'All changes saved and a version was created',
             errorBadImageUrl: 'Image url is incorrect',
             txtStyle_Normal: 'Normal',
             txtStyle_No_Spacing: 'No Spacing',
