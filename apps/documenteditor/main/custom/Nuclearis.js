@@ -425,6 +425,9 @@ define([
             {
                  this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
             });
+
+            //configura mode na api
+            _mainController.api.nuclearis_setMode(loadConfig.config.mode);
         };      
 
         var configureDownloadDocumentAsDocxButton = function()
