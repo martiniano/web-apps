@@ -94,9 +94,42 @@ define([
             if ( objData != null && objData.command == "replaceContentControls" )
             {
                 var items = {};
-                Object.assign(items, _mainController.editorConfig.macros, objData.data);
-                //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
-                _mainController.api.nuclearis_replaceContentControls(items);
+
+                if(objData.data && objData.data.IMAGE_MAP){
+                    
+                    var promises = [];
+                    var imageMapKeys = Object.keys(objData.data.IMAGE_MAP);
+                    for(var i = 0; i < imageMapKeys.length;i++){
+                        var imageMapKey = imageMapKeys[i];
+                        promises.push(urltoFile(objData.data.IMAGE_MAP[imageMapKey], imageMapKey+'.png'));
+                    }
+
+                    Promise.all(promises).then(function(files) {
+                        _mainController.api.nuclearis_uploadImageFiles(files, function(images){
+                            
+                            delete objData.data.IMAGE_MAP;
+                            var sectionKeys = Object.keys(objData.data);
+                            for(var i = 0; i < images.length;i++){
+                                for(var j = 0; j < sectionKeys.length;j++){
+                                    var sectionKey = sectionKeys[j];
+                                    var section = objData.data[sectionKey];
+                                    section = section.replace(imageMapKeys[i], images[i]);
+                                    objData.data[sectionKey] = section;
+                                }
+                            }
+                               
+                            Object.assign(items, _mainController.editorConfig.macros, objData.data);
+                            //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
+                            _mainController.api.nuclearis_replaceContentControls(items);   
+                        });
+                    });
+                    
+
+                }else{
+                    Object.assign(items, _mainController.editorConfig.macros, objData.data);
+                    //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
+                    _mainController.api.nuclearis_replaceContentControls(items);
+                }
             }
 
             if ( objData != null && objData.command == "uploadAndInsertImage" )
@@ -424,10 +457,9 @@ define([
             _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function ()
             {
                  this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
+                 //configura mode na api
+                 this.nuclearis_setMode(loadConfig.config.mode);
             });
-
-            //configura mode na api
-            _mainController.api.nuclearis_setMode(loadConfig.config.mode);
         };      
 
         var configureDownloadDocumentAsDocxButton = function()
@@ -474,7 +506,7 @@ define([
 
                         reader.addEventListener("load", function () 
                         {
-                            const anchor = document.createElement('a');
+                            var anchor = document.createElement('a');
                             anchor.setAttribute('href', this.result);
                             anchor.setAttribute('download', file.name);
                             anchor.setAttribute('target', '_blank');
@@ -547,7 +579,7 @@ define([
                     {
                         var reader = new FileReader();
                         reader.addEventListener("load", function () {
-                            const anchor = document.createElement('a');
+                            var anchor = document.createElement('a');
                             anchor.setAttribute('href', this.result);
                             anchor.setAttribute('download', file.name);
                             anchor.setAttribute('target', '_blank');

@@ -18,6 +18,7 @@ define([
         var _mainController = null;
         var _recognition = null;
         var _started = false;
+        var _lang = '';
 
 
         var _autorestartCount = 0;
@@ -26,74 +27,141 @@ define([
         var _keyReplaces = [];
         var _timeOut;
         var _errorAlert = false;
-        var _keyReplacesDefault = [
-          // Parágrafo
-          { key: /parágrafo/ig, value: '{$}paragraph{$}'},
-          { key: /paragrafo/ig, value: '{$}paragraph{$}'},
-          { key: /Parágrafo/ig, value: '{$}paragraph{$}'},
-          { key: /Paragrafo/ig, value: '{$}paragraph{$}'},
-      
-          // Nova Linha
-          { key: /nova linha /ig, value: '{$}newLine{$}'},
-          { key: /nova linha/ig, value: '{$}newLine{$}'},
-          { key: /Nova linha /ig, value: '{$}newLine{$}'},
-          { key: /Nova linha/ig, value: '{$}newLine{$}'},
-      
-          // Ponto e Vírgula
-          { key: / ponto e virgula/ig, value: ';'},
-          { key: /ponto e virgula/ig, value: ';'},
-          { key: / ponto e vírgula/ig, value: ';'},
-          { key: /ponto e vírgula/ig, value: ';'},
-          { key: / ponto e,/ig, value: ';'},
-          { key: /ponto e,/ig, value: ';'},
-      
-          // Dois Pontos
-          { key: / 2 pontos/ig, value: ':'},
-          { key: /2 pontos/ig, value: ':'},
-          { key: / dois pontos/ig, value: ':'},
-          { key: /dois pontos/ig, value: ':'},
-      
-          // Ponto
-          { key: / pontos/ig, value: '.'},
-          { key: /pontos/ig, value: '.'},
-          { key: / ponto/ig, value: '.'},
-          { key: /ponto/ig, value: '.'},
-          { key: / punto/ig, value: '.'},
-          { key: /punto/ig, value: '.'},
-          { key: / Ponto/ig, value: '.'},
-          { key: /Ponto/ig, value: '.'},
-      
-          // Virgula
-          { key: / virgula/ig, value: ','},
-          { key: /virgula/ig, value: ','},
-          { key: / vírgula/ig, value: ','},
-          { key: /vírgula/ig, value: ','},
-      
-          // Abre e fecha Parênteses
-          { key: /abre parênteses/ig, value: '('},
-          { key: /abre parenteses/ig, value: '('},
-          { key: /abre parêntese/ig, value: '('},
-          { key: /abre parentese/ig, value: '('},
-          { key: /fecha parênteses/ig, value: ')'},
-          { key: /fecha parenteses/ig, value: ')'},
-          { key: /fecha parêntese/ig, value: ')'},
-          { key: /fecha parentese/ig, value: ')'},
-      
-          // Asteristico
-          { key: /asterisco/ig, value: '*'},
-      
-          // Traço
-          { key: /traço/ig, value: '-'},
-      
-          // Barra e contra barra
-          { key: /barra/ig, value: '/'},
-          { key: /barra/ig, value: '/'},
-          { key: /contra-barra/ig, value: '\\'},
-          { key: /contra barra/ig, value: '\\'},
-      
-          // Palavras Médicas
-          { key: /c\*\*\*\*/ig, value: 'corno'},
-        ];
+
+        var _keyReplacesDefault = {
+          'pt': [
+            // Parágrafo
+            { key: /parágrafo/ig, value: '{$}paragraph{$}'},
+            { key: /paragrafo/ig, value: '{$}paragraph{$}'},
+            { key: /Parágrafo/ig, value: '{$}paragraph{$}'},
+            { key: /Paragrafo/ig, value: '{$}paragraph{$}'},
+        
+            // Nova Linha
+            { key: /nova linha /ig, value: '{$}newLine{$}'},
+            { key: /nova linha/ig, value: '{$}newLine{$}'},
+            { key: /Nova linha /ig, value: '{$}newLine{$}'},
+            { key: /Nova linha/ig, value: '{$}newLine{$}'},
+        
+            // Ponto e Vírgula
+            { key: / ponto e virgula/ig, value: ';'},
+            { key: /ponto e virgula/ig, value: ';'},
+            { key: / ponto e vírgula/ig, value: ';'},
+            { key: /ponto e vírgula/ig, value: ';'},
+            { key: / ponto e,/ig, value: ';'},
+            { key: /ponto e,/ig, value: ';'},
+        
+            // Dois Pontos
+            { key: / 2 pontos/ig, value: ':'},
+            { key: /2 pontos/ig, value: ':'},
+            { key: / dois pontos/ig, value: ':'},
+            { key: /dois pontos/ig, value: ':'},
+        
+            // Ponto
+            { key: / pontos/ig, value: '.'},
+            { key: /pontos/ig, value: '.'},
+            { key: / ponto/ig, value: '.'},
+            { key: /ponto/ig, value: '.'},
+            { key: / punto/ig, value: '.'},
+            { key: /punto/ig, value: '.'},
+            { key: / Ponto/ig, value: '.'},
+            { key: /Ponto/ig, value: '.'},
+        
+            // Virgula
+            { key: / virgula/ig, value: ','},
+            { key: /virgula/ig, value: ','},
+            { key: / vírgula/ig, value: ','},
+            { key: /vírgula/ig, value: ','},
+        
+            // Abre e fecha Parênteses
+            { key: /abre parênteses/ig, value: '('},
+            { key: /abre parenteses/ig, value: '('},
+            { key: /abre parêntese/ig, value: '('},
+            { key: /abre parentese/ig, value: '('},
+            { key: /fecha parênteses/ig, value: ')'},
+            { key: /fecha parenteses/ig, value: ')'},
+            { key: /fecha parêntese/ig, value: ')'},
+            { key: /fecha parentese/ig, value: ')'},
+        
+            // Asteristico
+            { key: /asterisco/ig, value: '*'},
+        
+            // Traço
+            { key: /traço/ig, value: '-'},
+        
+            // Barra e contra barra
+            { key: /barra/ig, value: '/'},
+            { key: /barra/ig, value: '/'},
+            { key: /contra-barra/ig, value: '\\'},
+            { key: /contra barra/ig, value: '\\'},
+        
+            // Palavras Médicas
+            { key: /c\*\*\*\*/ig, value: 'corno'},
+        ],
+        'es': [
+            // Parágrafo
+            { key: /párrafo/ig, value: '{$}paragraph{$}'},
+            { key: /parrafo/ig, value: '{$}paragraph{$}'},
+            { key: /Párrafo/ig, value: '{$}paragraph{$}'},
+            { key: /Parrafo/ig, value: '{$}paragraph{$}'},
+        
+            // Nova Linha
+            { key: /nueva linea /ig, value: '{$}newLine{$}'},
+            { key: /nueva linea/ig, value: '{$}newLine{$}'},
+            { key: /Nueva linea /ig, value: '{$}newLine{$}'},
+            { key: /Nueva linea/ig, value: '{$}newLine{$}'},
+        
+            // Ponto e Vírgula
+            { key: / punto y coma/ig, value: ';'},
+            { key: /punto y coma/ig, value: ';'},
+            { key: / punto y,/ig, value: ';'},
+            { key: /punto y,/ig, value: ';'},
+        
+            // Dois Pontos
+            { key: / 2 puntos/ig, value: ':'},
+            { key: /2 puntos/ig, value: ':'},
+            { key: / dos puntos/ig, value: ':'},
+            { key: /dos puntos/ig, value: ':'},
+        
+            // Ponto
+            { key: / puntos/ig, value: '.'},
+            { key: /puntos/ig, value: '.'},
+            { key: / punto/ig, value: '.'},
+            { key: /punto/ig, value: '.'},
+            { key: / punto/ig, value: '.'},
+            { key: /punto/ig, value: '.'},
+            { key: / Punto/ig, value: '.'},
+            { key: /Punto/ig, value: '.'},
+        
+            // Virgula
+            { key: / coma/ig, value: ','},
+            { key: /coma/ig, value: ','},
+        
+            // Abre e fecha Parênteses
+            { key: /paréntesis abiertos/ig, value: '('},
+            { key: /parentesis abiertos/ig, value: '('},
+            { key: /paréntesis abierto/ig, value: '('},
+            { key: /parentesis abierto/ig, value: '('},
+            { key: /paréntesis cercanos/ig, value: ')'},
+            { key: /parentesis cercanos/ig, value: ')'},
+            { key: /paréntesis cercano/ig, value: ')'},
+            { key: /parentesis cercano/ig, value: ')'},
+        
+            // Asteristico
+            { key: /asterisco/ig, value: '*'},
+        
+            // Traço
+            { key: /rasgo/ig, value: '-'},
+        
+            // Barra e contra barra
+            { key: /barra/ig, value: '/'},
+            { key: /bar/ig, value: '/'},
+            { key: /contra-barra/ig, value: '\\'},
+            { key: /contra barra/ig, value: '\\'},
+        
+            // Palavras Médicas
+            { key: /c\*\*\*\*/ig, value: 'corno'},
+          ]
+        };
 
         var reset = function() {
             me._recognition = null;
@@ -110,6 +178,8 @@ define([
                     }
                 }
             }
+
+            _lang = loadConfig.config.lang;
 
             if(loadConfig.config.mode == "edit"){
               configureVoiceRecognitionButton();
@@ -174,11 +244,22 @@ define([
 
         var initSpeechRecognition = function(){
             if(_recognition == null){
+                
+              var lg = 'pt';
+              var language = 'pt-BR';
+              if(_lang != null && _lang.startsWith('pt')){
+                lg = 'pt';
+                language = 'pt-BR';
+              } else if(_lang != null && _lang.startsWith('es')){
+                lg = 'es';
+                language = 'es-ES';
+              }
+              
                 _started = false;
                 _recognition = new webkitSpeechRecognition();
                 _recognition.continuous = true;
                 _recognition.interimResults = true;
-                _recognition.lang = "pt-BR";
+                _recognition.lang = language;
             
                 _recognition.onstart = function () {
                     console.log('On start');
@@ -219,9 +300,9 @@ define([
                     _errorAlert = true;
                     stopListen();
                   }
-								}
+                }
 
-                _keyReplaces = Object.assign([], _keyReplacesDefault);
+                _keyReplaces = Object.assign([], _keyReplacesDefault[lg]);
                 _mainController.api.nuclearis_initVoiceRecognition(_keyReplaces);
 
                 _mainController.api.asc_registerCallback('nuclearis_onChangeVoiceRegStatus', function(status){
