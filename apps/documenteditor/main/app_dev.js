@@ -61,7 +61,8 @@ require.config({
         analytics       : 'common/Analytics',
         gateway         : 'common/Gateway',
         locale          : 'common/locale',
-        irregularstack  : 'common/IrregularStack'
+        irregularstack  : 'common/IrregularStack',
+        nuclearis       : 'documenteditor/main/custom/Nuclearis'
     },
 
     shim: {
