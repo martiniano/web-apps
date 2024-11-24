@@ -61,7 +61,8 @@ require.config({
         analytics       : 'common/Analytics',
         gateway         : 'common/Gateway',
         locale          : 'common/locale',
-        irregularstack  : 'common/IrregularStack'
+        irregularstack  : 'common/IrregularStack',
+        nuclearis       : 'documenteditor/main/custom/Nuclearis'
     },
 
     shim: {
@@ -192,6 +193,7 @@ require([
                 'documenteditor/main/app/view/ShapeSettings',
                 'documenteditor/main/app/view/TextArtSettings',
                 'documenteditor/main/app/view/SignatureSettings',
+                'documenteditor/main/custom/Nuclearis',
                 'common/main/lib/util/utils',
                 'common/main/lib/controller/Fonts',
                 'common/main/lib/controller/History'
