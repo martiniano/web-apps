@@ -14,8 +14,6 @@ define([
   'documenteditor/main/custom/AtalhoSettingsDialog',
 ], function ($, _, Backbone, gateway) {
   Common.Nuclearis = new (function () {
-    var _guidConstrutorDeLaudo = "asc.{A8705DEE-7544-4C33-B3D5-168406D92F72}";
-    var _guidNuclearisMacros = "asc.{6C5EFDEE-127E-11E8-B642-0ED5F89F718B}";
     var _mainController = null;
     var _buffer = { startPos: null, endPos: null, text: '' };
     var _itensBuffer = [];
@@ -297,37 +295,6 @@ define([
       }
       */
 
-      //Aciona o replace de content controls quando qualquer outro plugin fechar
-      if (!_mainController.api.asc_checkNeedCallback('asc_onPluginClose')) {
-        _mainController.api.asc_registerCallback('asc_onPluginClose', function (plugin) {
-          console.log("testando mudar o código");
-          //_mainController.api.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
-        });
-      }
-
-      if (!_mainController.api.asc_checkNeedCallback('asc_onPluginShow')) {
-        _mainController.api.asc_registerCallback('asc_onPluginShow', function (plugin) {
-          if (plugin.guid === _guidNuclearisMacros) {
-            var _plugin = window.g_asc_plugins.runnedPluginsMap[_guidNuclearisMacros];
-            if (!_plugin)
-              return;
-
-            _plugin.startData.setAttribute("macros", _mainController.editorConfig.macros);
-            _plugin.startData.setAttribute("macrosDeQuestionario", _mainController.editorConfig.macrosDeQuestionario);
-          }
-
-          if (plugin.guid === _guidConstrutorDeLaudo) {
-            var _plugin = window.g_asc_plugins.runnedPluginsMap[_guidConstrutorDeLaudo];
-            if (!_plugin)
-              return;
-
-            _plugin.startData.setAttribute("macros", _mainController.editorConfig.macros);
-            _plugin.startData.setAttribute("macrosDeQuestionario", _mainController.editorConfig.macrosDeQuestionario);
-          }
-
-        });
-      }
-
       //Estatísticas
       _mainController.api.asc_registerCallback('asc_onDocInfo', function (obj) {
         if (obj) {
@@ -420,14 +387,6 @@ define([
           }
         }
       });
-
-
-      _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function () {
-        //this.nuclearis_replaceContentControls(_mainController.editorConfig.macros);
-        //configura mode na api
-        //this.nuclearis_setMode(loadConfig.config.mode);
-      });
-
     };
 
     var configureDownloadDocumentAsDocxButton = function () {
