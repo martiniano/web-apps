@@ -1053,7 +1053,10 @@ define([
                     toolbarView._isEyedropperStart ? toolbarView._isEyedropperStart = false : rightMenu._isEyedropperStart = false;
                     this.api.asc_cancelEyedropper();
                 }
-                application.getController('DocumentHolder').getView().focus();
+                
+                if (this.editorConfig.autoFocus) {
+                    application.getController('DocumentHolder').getView().focus();
+                }
 
                 if (this.api && this.appOptions.isEdit && !toolbarView._state.previewmode) {
                     var cansave = this.api.asc_isDocumentCanSave(),
