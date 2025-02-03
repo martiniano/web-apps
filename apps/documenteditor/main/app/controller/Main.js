@@ -1613,7 +1613,7 @@ define([
                 } else if (!this.appOptions.isDesktopApp && !this.appOptions.canBrandingExt &&
                             this.editorConfig && this.editorConfig.customization && (this.editorConfig.customization.loaderName || this.editorConfig.customization.loaderLogo ||
                             this.editorConfig.customization.font && (this.editorConfig.customization.font.size || this.editorConfig.customization.font.name))) {
-                    Common.UI.warning({
+                    console.warn({
                         title: this.textPaidFeature,
                         msg  : this.textCustomLoader,
                         buttons: [{value: 'contact', caption: this.textContactUs}, {value: 'close', caption: this.textClose}],
