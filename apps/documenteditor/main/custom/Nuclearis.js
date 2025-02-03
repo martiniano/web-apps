@@ -11,16 +11,9 @@ define([
   'underscore',
   'backbone',
   'gateway',
-  'documenteditor/main/custom/AtalhoSettingsDialog',
 ], function ($, _, Backbone, gateway) {
   Common.Nuclearis = new (function () {
     var _mainController = null;
-    var _buffer = { startPos: null, endPos: null, text: '' };
-    var _itensBuffer = [];
-    var _atalhoAutoCompleteMenu = null;
-    var _renderMenu = true;
-    var _atalhos = null;
-    var _categoriasDeAtalho = null;
     var _infoObj = {
       PageCount: 0,
       WordsCount: 0,
@@ -28,13 +21,7 @@ define([
       SymbolsCount: 0,
       SymbolsWSCount: 0
     };
-    var me = this;
     var _signaturesBlock = null;
-
-    var _state = {
-      isFromNuclearisDownloadAsDocx: false,
-      isFromNuclearisDownloadAsPdf: false,
-    };
 
     var onInternalCommand = function (objData) {
       //Force Save
@@ -109,7 +96,6 @@ define([
               }
 
               Object.assign(items, _mainController.editorConfig.macros, objData.data);
-              //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
               _mainController.api.nuclearis_replaceContentControls(items);
             });
           });
@@ -117,7 +103,6 @@ define([
 
         } else {
           Object.assign(items, _mainController.editorConfig.macros, objData.data);
-          //_mainController.api.pluginMethod_InsertAndReplaceContentControls();
           _mainController.api.nuclearis_replaceContentControls(items);
         }
       }
@@ -247,54 +232,6 @@ define([
         return;
       }
 
-      /*
-      var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
-      if ( currentValueAutocompleteAtalho === null )
-      {
-          currentValueAutocompleteAtalho = 0;
-          Common.localStorage.setItem("de-settings-autocomplete-atalho", currentValueAutocompleteAtalho);
-      }
-                              
-      var menuAddShortcutPara = new Common.UI.MenuItem({
-          caption     : 'Adicionar Atalho'
-      }).on('click', _.bind(adicionarAtalhoDialog, me));
-
-      menuAddShortcutPara.setVisible(true);
-
-      _mainController.api.asc_registerCallback('asc_onContextMenu', function()
-      {
-          var application = _mainController.getApplication();
-          var documentHolderView =  application.getController('DocumentHolder').getView();
- 
-          var selectedElements =  _mainController.api.getSelectedElements();
-          var menu_item_props = getMenuItemProps(selectedElements);
-
-          menuAddShortcutPara.menu_item_props = menu_item_props;
-
-          menuAddShortcutPara.menu_item_props.selectedText = _mainController.api.nuclearis_getSelectedText(true);
-
-          if ( menu_item_props.hasSpellCheck && !menu_item_props.spellProps.value.Checked )
-          {
-              documentHolderView.textMenu.insertItem(-1, menuAddShortcutPara);
-          }
-          else
-          {
-              documentHolderView.textMenu.insertItem(0, menuAddShortcutPara);
-          } 
-      });
-
-      _atalhoAutoCompleteMenu = new Common.UI.Menu({
-          items: [ ]
-      }).on('item:click', function (menu, item, e) {
-          _mainController.api.nuclearis_replaceShortcut(item.value, _atalhos[item.value], _buffer, _itensBuffer);
-      });
-
-      if ( _mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos )
-      {
-          _atalhos = _mainController.editorConfig.atalhos;		
-      }
-      */
-
       //Estatísticas
       _mainController.api.asc_registerCallback('asc_onDocInfo', function (obj) {
         if (obj) {
@@ -314,64 +251,8 @@ define([
       _mainController.api.asc_registerCallback('asc_onGetDocInfoEnd', function () {
         Common.Gateway.metaChange({ type: 'docInfo', info: _infoObj });
       });
-
-      /*
-       * disable atalhos
-       *
-      //Botão na Barra de Status
-      var statusbarView = DE.getController('Statusbar').getView('Statusbar');
-      statusbarView.$el.find('.status-group:last').prepend('<button id="btn-complete-atalho" type="button" class="btn small btn-toolbar el-edit"><span class="btn-icon" style="background-position: var(--bgX) -920px">&nbsp;</span></button>');
-      statusbarView.$el.find('.status-group:last').prepend('<div class="separator short el-edit"></div>');
-      var btnCompleteAtalho = new Common.UI.Button({
-          el: $('#btn-complete-atalho',statusbarView.el),
-          enableToggle: true,
-          hint: "Exibir sugestões de atalhos",
-          hintAnchor: 'top'
-      });
-
-      var currentValueAutocompleteAtalho = Common.localStorage.getItem("de-settings-autocomplete-atalho");
-      btnCompleteAtalho.toggle(currentValueAutocompleteAtalho===null || parseInt(currentValueAutocompleteAtalho) == 1, true);
-
-      btnCompleteAtalho.on('click', function() 
-      {
-          var value = Common.localStorage.getItem("de-settings-autocomplete-atalho");;
-          value = 1 - value;
-          Common.localStorage.setItem("de-settings-autocomplete-atalho", value);
-          btnCompleteAtalho.toggle(value===null || parseInt(value) == 1, true);
-      });
-
-      _mainController.api.asc_registerCallback('nuclearis_onShortcutsFounded', function(itens)
-      {
-          if ( itens.length > 0 )
-          {
-              if ( !_.isEqual(itens, _itensBuffer ))
-              {
-                  _itensBuffer = itens;
-                  var currentValueAutocompleteShortcut = parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho"))
-                  if ( currentValueAutocompleteShortcut === 1 )
-                  {
-                      showShortcutsPopupMenu(itens);          
-                  }                         
-              }
-          }
-          else
-          {
-              if ( _atalhoAutoCompleteMenu.isVisible() )
-              {
-                  _atalhoAutoCompleteMenu.hide();
-                  _itensBuffer = [];
-              }
-          }
-      });
-      */
-
+      
       if (loadConfig.config.mode == "edit") {
-        //disable download as docx button temporary
-        //configureDownloadDocumentAsDocxButton();
-
-        //disable download as pdf button temporary
-        //configureDownloadDocumentAsPdfButton();
-
         _mainController.api.asc_registerCallback('asc_onDocumentContentReady', function () {
           _mainController.api.nuclearis_registerCallbacks();
         });
@@ -388,325 +269,17 @@ define([
         }
       });
     };
-
-    var configureDownloadDocumentAsDocxButton = function () {
-      var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
-      leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-docx" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
-
-      leftMenuView.btnDownloadDocument = new Common.UI.Button({
-        el: $('#left-btn-download-document-docx', leftMenuView.el),
-        enableToggle: true,
-        disabled: true,
-        hint: "Realiza o download do documento em formato docx (compatível com o Microsoft Word)"
-      });
-
-      leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-image', "url('./resources/img/ms-word.png'");
-      leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-position', "center center");
-      leftMenuView.$el.find('#left-btn-download-document-docx span').css('background-size', "14px 14px");
-
-
-      _mainController.api.asc_registerCallback('asc_onDownloadUrl', function (url) {
-        if (_state.isFromNuclearisDownloadAsDocx) {
-          var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
-          var dataAtendimento = "";
-          if (_mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']) {
-            dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
-            documentTitle = dataAtendimento + "_" + documentTitle;
-          }
-
-          if (_mainController.editorConfig.patientName) {
-            var patientName = _mainController.editorConfig.patientName;
-            documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle;
-          }
-
-          _mainController.api.nuclearis_documentRemoveWatermark("RASCUNHO");
-
-          urltoFile(url, documentTitle).then(function (file) {
-
-            var reader = new FileReader();
-
-            reader.addEventListener("load", function () {
-              var anchor = document.createElement('a');
-              anchor.setAttribute('href', this.result);
-              anchor.setAttribute('download', file.name);
-              anchor.setAttribute('target', '_blank');
-              anchor.style.display = 'none';
-              document.body.appendChild(anchor);
-              anchor.click();
-              document.body.removeChild(anchor);
-            }, false);
-
-            reader.readAsDataURL(file);
-          });
-        }
-
-        _state.isFromNuclearisDownloadAsDocx = false;
-        leftMenuView.btnDownloadDocument.setDisabled(false);
-      });
-
-      leftMenuView.btnDownloadDocument.on('click', function () {
-        if (leftMenuView.btnDownloadDocument.isActive())
-          leftMenuView.btnDownloadDocument.toggle(false);
-
-        leftMenuView.btnDownloadDocument.setDisabled(true);
-
-        _mainController.api.nuclearis_documentInsertWatermark("RASCUNHO", true);
-
-        _state.isFromNuclearisDownloadAsDocx = true;
-        if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.DOCX, true);
-      });
-    };
-
-    var configureDownloadDocumentAsPdfButton = function () {
-      var leftMenuView = DE.getController('LeftMenu').getView('LeftMenu');
-      leftMenuView.$el.find('.tool-menu-btns:last').append('<button id="left-btn-download-document-pdf" class="btn btn-category"><span class="btn-icon img-toolbarmenu" style="background-position: var(--bgX) -1401px">&nbsp;</span></button>');
-      //statusbarView.$el.find('.tool-menu-btns:last').prepend('<div class="separator short el-edit"></div>');
-
-      leftMenuView.btnDownloadDocumentPdf = new Common.UI.Button({
-        el: $('#left-btn-download-document-pdf', leftMenuView.el),
-        enableToggle: true,
-        disabled: true,
-        hint: "Realiza o download do documento em formato pdf (formato não editável)"
-      });
-
-      leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-image', "url('./resources/img/icon-pdf.png'");
-      leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-position', "center center");
-      leftMenuView.$el.find('#left-btn-download-document-pdf span').css('background-size', "14px 14px");
-
-      _mainController.api.asc_registerCallback('asc_onDownloadUrl', function (url) {
-        if (_state.isFromNuclearisDownloadAsPdf) {
-          var documentTitle = _mainController.api.asc_getDocumentName().toUpperCase();
-
-          var dataAtendimento = "";
-          if (_mainController.editorConfig.macros && _mainController.editorConfig.macros['m;data_atendimento']) {
-            dataAtendimento = _mainController.editorConfig.macros['m;data_atendimento'].replaceAll("/", "_");
-            documentTitle = dataAtendimento + "_" + documentTitle;
-          }
-
-          if (_mainController.editorConfig.patientName) {
-            var patientName = _mainController.editorConfig.patientName;
-            documentTitle = patientName.replaceAll(" ", "_").toUpperCase() + "_" + documentTitle.replaceAll('DOCX', 'PDF');
-          }
-
-          _mainController.api.nuclearis_removeWatermark();
-
-          urltoFile(url, documentTitle).then(function (file) {
-            var reader = new FileReader();
-            reader.addEventListener("load", function () {
-              var anchor = document.createElement('a');
-              anchor.setAttribute('href', this.result);
-              anchor.setAttribute('download', file.name);
-              anchor.setAttribute('target', '_blank');
-              anchor.style.display = 'none';
-              document.body.appendChild(anchor);
-              anchor.click();
-              document.body.removeChild(anchor);
-            }, false);
-
-            reader.readAsDataURL(file);
-          });
-        }
-
-        _state.isFromNuclearisDownloadAsPdf = false;
-        leftMenuView.btnDownloadDocumentPdf.setDisabled(false);
-      });
-
-      leftMenuView.btnDownloadDocumentPdf.on('click', function () {
-        if (leftMenuView.btnDownloadDocumentPdf.isActive())
-          leftMenuView.btnDownloadDocumentPdf.toggle(false);
-
-        leftMenuView.btnDownloadDocumentPdf.setDisabled(true);
-
-        _mainController.api.nuclearis_addWatermark();
-
-        _state.isFromNuclearisDownloadAsPdf = true;
-        if (_mainController.api) _mainController.api.asc_DownloadAs(Asc.c_oAscFileType.PDF, true);
-      });
-    };
-
-    var handleDocumentKeyUp = function (event) {
-      if (_mainController != null && _mainController.api != null) {
-        _mainController.api.nuclearis_searchShortcut(_buffer, _atalhos, _itensBuffer, _renderMenu, parseInt(Common.localStorage.getItem("de-settings-autocomplete-atalho")));
-      }
-    };
-
-    var handleDocumentKeyDown = function (event) {
-      if (_mainController != null && _mainController.api != null) {
-        //var key = event.keyCode;
-
-        if (_atalhos == null) {
-          if (_mainController && _mainController.editorConfig && _mainController.editorConfig.atalhos) {
-            _atalhos = _mainController.editorConfig.atalhos;
-          }
-        }
-
-        _renderMenu = true;
-        _itensBuffer = [];
-        if (_atalhoAutoCompleteMenu.isVisible()) {
-
-          //Bottom Arrow
-          if (event.keyCode == Common.UI.Keys.DOWN) {
-            _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.UP);
-            _atalhoAutoCompleteMenu.cmpEl.focus();
-            _.delay(function () {
-              _atalhoAutoCompleteMenu.items[0].cmpEl.find('a:first').focus();
-            }, 10);
-            _renderMenu = false;
-            return false;
-          }
-
-          //Top Arrow
-          if (event.keyCode == Common.UI.Keys.UP) {
-            _mainController.api.nuclearis_emulateKeyDownApi(Common.UI.Keys.DOWN);
-            _atalhoAutoCompleteMenu.cmpEl.focus();
-            _.delay(function () {
-              var lastItem = _atalhoAutoCompleteMenu.items.length - 1;
-              _atalhoAutoCompleteMenu.items[lastItem].cmpEl.find('a:first').focus();
-            }, 10);
-            _renderMenu = false;
-            return false;
-          }
-        }
-      }
-    };
-
-
-    var showPopupMenu = function (documentHolderView, menu, value, event, docElement, eOpts) {
-      if (!_.isUndefined(menu) && menu !== null) {
-        Common.UI.Menu.Manager.hideAll();
-
-        var showPoint = [event.X_abs, event.Y_abs],
-          menuContainer = $(documentHolderView.$el).find(Common.Utils.String.format('#menu-container-{0}', menu.id));
-
-        if (!menu.rendered) {
-          // Prepare menu container
-          if (menuContainer.length < 1) {
-            menuContainer = $(Common.Utils.String.format('<div id="menu-container-{0}" style="position: absolute; z-index: 10000;"><div class="dropdown-toggle" data-toggle="dropdown"></div></div>', menu.id));
-            $(documentHolderView.$el).append(menuContainer);
-          }
-
-          menu.render(menuContainer);
-          menu.cmpEl.attr({ tabindex: "-1" });
-        }
-
-        menuContainer.css({
-          left: showPoint[0],
-          top: showPoint[1]
-        });
-
-        menu.show();
-
-        if (_.isFunction(menu.options.initMenu)) {
-          menu.options.initMenu(value);
-          menu.alignPosition();
-        }
-
-        _.delay(function () {
-          //menu.cmpEl.focus();
-          if (menu.items.length == 1) {
-            menu.items[0].cmpEl.addClass('over');
-            menu.items[0].cmpEl.find('a:first').focus();
-          }
-        }, 10);
-
-        documentHolderView.currentMenu = menu;
-      }
-    };
-
-    var showShortcutsPopupMenu = function (itens) {
-      var ConvertedPos = _mainController.api.nuclearis_convertCoordsToCursorWR();
-
-      var menuData = { Type: 0, X_abs: ConvertedPos.X, Y_abs: ConvertedPos.Y };
-
-      _atalhoAutoCompleteMenu.removeAll();
-      for (var i = 0; i < itens.length; i++) {
-        var menuItemAtalho = new Common.UI.MenuItem({
-          caption: Common.Utils.String.ellipsis(itens[i] + ' - ' + _atalhos[itens[i]], 80, true),
-          value: itens[i]
-        });
-
-        _atalhoAutoCompleteMenu.addItem(menuItemAtalho);
-      }
-
-      var application = _mainController.getApplication();
-      var documentHolderView = application.getController('DocumentHolder').getView('DocumentHolder');
-
-      showPopupMenu(documentHolderView, _atalhoAutoCompleteMenu, {}, menuData, null, null);
-    }
-
+    
     Common.Gateway.on('init', onInit);
 
     Common.Gateway.on('internalcommand', onInternalCommand);
-
-    //disabled atalhos temporary
-    //$(document).on('keyup', handleDocumentKeyUp);
-
-    //disabled atalhas temporary
-    //$(document).on('keydown', handleDocumentKeyDown);
-
-    var adicionarAtalhoDialog = function (item, e, eOpt) {
-      var win;
-      var application = _mainController.getApplication();
-      var documentHolderView = application.getController('DocumentHolder').getView('DocumentHolder');
-
-      if (_categoriasDeAtalho == null) {
-        if (_mainController && _mainController.editorConfig && _mainController.editorConfig.categoriasDeAtalho) {
-          _categoriasDeAtalho = _mainController.editorConfig.categoriasDeAtalho;
-        }
-      }
-
-      if (_mainController.api) {
-        win = new DE.Views.AtalhoSettingsDialog({
-          api: _mainController.api,
-          handler: function (dlg, result) {
-            if (result == 'ok') {
-              var _props = dlg.getSettings();
-              Common.Gateway.metaChange({ type: 'adicionarAtalho', props: _props });
-              _atalhos[_props.sigla] = _props.atalho_texto;
-            }
-            documentHolderView.fireEvent('editcomplete', documentHolderView);
-          },
-          categoriasDeAtalho: _categoriasDeAtalho
-        });
-
-        win.show();
-        win.setSettings(item.menu_item_props.selectedText);
-      }
-    };
-
-    var getMenuItemProps = function (selectedElements) {
-      if (!selectedElements || !_.isArray(selectedElements)) return;
-      var menu_props = {};
-      for (var i = 0; i < selectedElements.length; i++) {
-        var elType = selectedElements[i].get_ObjectType();
-        var elValue = selectedElements[i].get_ObjectValue();
-        if (Asc.c_oAscTypeSelectElement.Paragraph == elType) {
-          menu_props.paraProps = {};
-          menu_props.paraProps.value = elValue;
-          menu_props.paraProps.locked = (elValue) ? elValue.get_Locked() : false;
-          noobject = false;
-        }
-        else if (Asc.c_oAscTypeSelectElement.SpellCheck == elType) {
-          menu_props.spellProps = {};
-          menu_props.spellProps.value = elValue;
-          menu_props.hasSpellCheck = true;
-        }
-      }
-      return menu_props;
-    };
-
-    var _getAtalhos = function () {
-      return _atalhos;
-    };
 
     String.prototype.replaceAll = function (search, replacement) {
       var target = this;
       return target.replace(new RegExp(search, 'g'), replacement);
     };
 
-    return {
-      getAtalhos: _getAtalhos
-    };
+    return {};
 
   })();
 });
